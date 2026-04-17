@@ -38,7 +38,7 @@ public class TraineeService {
     }
 
     public Trainee getById(Long id) {
-        return dao.getTraineeById(id)
+        return dao.findTraineeById(id)
                 .orElseThrow(() -> new RuntimeException("Trainee not found"));
     }
 

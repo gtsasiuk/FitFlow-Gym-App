@@ -34,7 +34,7 @@ public class UsernameGenerator {
                 .filter(t -> t.getUsername() != null && t.getUsername().startsWith(base))
                 .count();
 
-        long trainerCount = trainerDao.getAllTrainers().stream()
+        long trainerCount = trainerDao.findAllTrainers().stream()
                 .filter(t -> t.getUsername() != null && t.getUsername().startsWith(base))
                 .count();
 

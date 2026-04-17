@@ -22,11 +22,11 @@ public class TraineeDao {
         return trainee;
     }
 
-    public List<Trainee> getAllTrainees() {
+    public List<Trainee> findAllTrainees() {
         return storage.getTrainees().values().stream().toList();
     }
 
-    public Optional<Trainee> getTraineeById(Long id) {
+    public Optional<Trainee> findTraineeById(Long id) {
         return Optional.ofNullable(storage.getTrainees().get(id));
     }
 

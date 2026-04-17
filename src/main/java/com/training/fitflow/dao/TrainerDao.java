@@ -1,6 +1,5 @@
 package com.training.fitflow.dao;
 
-import com.training.fitflow.model.Trainee;
 import com.training.fitflow.model.Trainer;
 import com.training.fitflow.storage.InMemoryStorage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,11 +22,11 @@ public class TrainerDao {
         return trainer;
     }
 
-    public Optional<Trainer> getTrainerById(Long id) {
+    public Optional<Trainer> findTrainerById(Long id) {
         return Optional.ofNullable(storage.getTrainers().get(id));
     }
 
-    public List<Trainer> getAllTrainers() {
+    public List<Trainer> findAllTrainers() {
         return storage.getTrainers().values().stream().toList();
     }
 }

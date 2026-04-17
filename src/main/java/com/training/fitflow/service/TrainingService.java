@@ -17,17 +17,17 @@ public class TrainingService {
     private final TrainingDao trainingDao;
 
     public Training create(Training training) {
-        trainerDao.getTrainerById(training.getTrainerId())
+        trainerDao.findTrainerById(training.getTrainerId())
                 .orElseThrow(() -> new RuntimeException("Trainer not found"));
 
-        traineeDao.getTraineeById(training.getTraineeId())
+        traineeDao.findTraineeById(training.getTraineeId())
                 .orElseThrow(() -> new RuntimeException("Trainee not found"));
 
         return trainingDao.save(training);
     }
 
     private Training getById(Long id) {
-        return trainingDao.getTrainingById(id)
+        return trainingDao.findTrainingById(id)
                 .orElseThrow(() -> new RuntimeException("Training not found"));
     }
 
