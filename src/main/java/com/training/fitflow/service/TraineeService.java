@@ -4,11 +4,11 @@ import com.training.fitflow.dao.TraineeDao;
 import com.training.fitflow.model.Trainee;
 import com.training.fitflow.util.PasswordGenerator;
 import com.training.fitflow.util.UsernameGenerator;
+import com.training.fitflow.util.UserUpdateUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +30,11 @@ public class TraineeService {
     }
 
     public Trainee update(Trainee trainee) {
-        return dao.save(trainee);
+        Trainee existingTrainee = getById(trainee.getId());
+        UserUpdateUtil.updateNameFields(existingTrainee, trainee.getFirstName(), trainee.getLastName(), usernameGenerator);
+        existingTrainee.setAddress(trainee.getAddress());
+        existingTrainee.setDateOfBirth(trainee.getDateOfBirth());
+        return dao.save(existingTrainee);
     }
 
     public Trainee getById(Long id) {

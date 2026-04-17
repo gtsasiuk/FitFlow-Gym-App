@@ -4,6 +4,7 @@ import com.training.fitflow.dao.TrainerDao;
 import com.training.fitflow.model.Trainer;
 import com.training.fitflow.util.PasswordGenerator;
 import com.training.fitflow.util.UsernameGenerator;
+import com.training.fitflow.util.UserUpdateUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -29,17 +30,7 @@ public class TrainerService {
 
     public Trainer update(Trainer trainer) {
         Trainer existingTrainer = getById(trainer.getId());
-        existingTrainer.setFirstName(trainer.getFirstName());
-        existingTrainer.setLastName(trainer.getLastName());
-        if (!existingTrainer.getFirstName().equals(trainer.getFirstName()) ||
-                !existingTrainer.getLastName().equals(trainer.getLastName())) {
-
-            String newUsername = usernameGenerator.generate(
-                    trainer.getFirstName(),
-                    trainer.getLastName()
-            );
-            existingTrainer.setUsername(newUsername);
-        }
+        UserUpdateUtil.updateNameFields(existingTrainer, trainer.getFirstName(), trainer.getLastName(), usernameGenerator);
         existingTrainer.setSpecialization(trainer.getSpecialization());
         return dao.save(existingTrainer);
     }
