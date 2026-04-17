@@ -3,6 +3,7 @@ package com.training.fitflow.model;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.time.LocalDate;
 
@@ -19,4 +20,18 @@ public class Trainee extends User {
     }
     private LocalDate dateOfBirth;
     private String address;
+
+    @Override
+    public String toString() {
+        return "Trainee{" +
+                " id=" + id +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                ", active=" + active + '\'' +
+                ", dateOfBirth=" + dateOfBirth + '\'' +
+                ", address='" + address + '\'' +
+                '}';
+    }
 }
