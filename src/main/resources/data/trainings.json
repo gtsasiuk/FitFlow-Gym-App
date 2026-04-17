@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "trainerId": 1,
+    "traineeId": 1,
+    "trainingType": "Stretching",
+    "trainingDate": "2026-04-20"
+  },
+  {
+    "id": 2,
+    "trainerId": 2,
+    "traineeId": 2,
+    "trainingType": "Yoga",
+    "trainingDate": "2026-04-21"
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "firstName": "Mike",
+    "lastName": "Johnson",
+    "username": "Mike.Johnson",
+    "password": "trainerpass1",
+    "active": true,
+    "specialization": "Stretching"
+  },
+  {
+    "id": 2,
+    "firstName": "Sarah",
+    "lastName": "Williams",
+    "username": "Sarah.Williams",
+    "password": "trainerpass2",
+    "active": true,
+    "specialization": "Yoga"
+  }
+]

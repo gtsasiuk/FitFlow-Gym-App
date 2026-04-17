@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "firstName": "John",
+    "lastName": "Doe",
+    "username": "John.Doe",
+    "password": "pass123456",
+    "active": true,
+    "dateOfBirth": "1990-05-15",
+    "address": "123 Main St, New York, NY"
+  },
+  {
+    "id": 2,
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "username": "Jane.Smith",
+    "password": "pass456789",
+    "active": true,
+    "dateOfBirth": "1992-08-22",
+    "address": "456 Oak Ave, Los Angeles, CA"
+  }
+]
