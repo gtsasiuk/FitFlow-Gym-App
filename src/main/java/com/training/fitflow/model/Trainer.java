@@ -10,9 +10,9 @@ import lombok.Setter;
 public class Trainer extends User {
     public Trainer(Long id, String firstName, String lastName,
                    String username, String password, Boolean isActive,
-                   String specialization) {
+                   TrainingType specialization) {
         super(id, firstName, lastName, username, password, isActive);
         this.specialization = specialization;
     }
-    private String specialization;
+    private TrainingType specialization;
 }
