@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class TrainingDao {
@@ -21,8 +22,8 @@ public class TrainingDao {
         return training;
     }
 
-    public Training getTrainingById(Long id) {
-        return storage.getTrainings().get(id);
+    public Optional<Training> getTrainingById(Long id) {
+        return Optional.ofNullable(storage.getTrainings().get(id));
     }
 
     public List<Training> getAllTrainings() {
