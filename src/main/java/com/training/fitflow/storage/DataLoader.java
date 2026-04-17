@@ -6,6 +6,7 @@ import com.training.fitflow.model.Trainee;
 import com.training.fitflow.model.Trainer;
 import com.training.fitflow.model.Training;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +20,15 @@ import java.util.List;
 public class DataLoader {
     private final InMemoryStorage storage;
     private final ObjectMapper objectMapper;
+
+    @Value("${storage.trainees.file}")
+    private String traineesDataPath;
+
+    @Value("${storage.trainers.file}")
+    private String trainersDataPath;
+
+    @Value("${storage.training.file}")
+    private String trainingDataPath;
 
     @PostConstruct
     public void loadData() {
@@ -34,7 +44,7 @@ public class DataLoader {
     }
 
     private void loadTrainees() throws Exception {
-        InputStream inputStream = getClass().getResourceAsStream("/data/trainees.json");
+        InputStream inputStream = getClass().getResourceAsStream(traineesDataPath);
         if (inputStream != null) {
             List<Trainee> trainees = objectMapper.readValue(inputStream, new TypeReference<List<Trainee>>() {});
             trainees.forEach(trainee -> storage.getTrainees().put(trainee.getId(), trainee));
@@ -43,7 +53,7 @@ public class DataLoader {
     }
 
     private void loadTrainers() throws Exception {
-        InputStream inputStream = getClass().getResourceAsStream("/data/trainers.json");
+        InputStream inputStream = getClass().getResourceAsStream(trainersDataPath);
         if (inputStream != null) {
             List<Trainer> trainers = objectMapper.readValue(inputStream, new TypeReference<List<Trainer>>() {});
             trainers.forEach(trainer -> storage.getTrainers().put(trainer.getId(), trainer));
@@ -52,7 +62,7 @@ public class DataLoader {
     }
 
     private void loadTrainings() throws Exception {
-        InputStream inputStream = getClass().getResourceAsStream("/data/trainings.json");
+        InputStream inputStream = getClass().getResourceAsStream(trainingDataPath);
         if (inputStream != null) {
             List<Training> trainings = objectMapper.readValue(inputStream, new TypeReference<List<Training>>() {});
             trainings.forEach(training -> storage.getTrainings().put(training.getId(), training));
