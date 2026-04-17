@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -17,6 +17,6 @@ public class Training {
     private Long trainerId;
     private String name;
     private TrainingType type;
-    private Date date;
+    private LocalDate date;
     private Integer duration;
 }
