@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class UsernameGenerator {
-
     private TraineeDao traineeDao;
     private TrainerDao trainerDao;
 
@@ -30,7 +29,7 @@ public class UsernameGenerator {
     }
 
     private long countExisting(String base) {
-        long traineeCount = traineeDao.getAllTrainees().stream()
+        long traineeCount = traineeDao.findAllTrainees().stream()
                 .filter(t -> t.getUsername() != null && t.getUsername().startsWith(base))
                 .count();
 

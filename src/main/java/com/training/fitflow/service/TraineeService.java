@@ -43,7 +43,7 @@ public class TraineeService {
     }
 
     public List<Trainee> getAll() {
-        return dao.getAllTrainees();
+        return dao.findAllTrainees();
     }
 
     public void deleteById(Long id) {

@@ -26,12 +26,12 @@ public class TrainingService {
         return trainingDao.save(training);
     }
 
-    private Training getById(Long id) {
+    public Training getById(Long id) {
         return trainingDao.findTrainingById(id)
                 .orElseThrow(() -> new RuntimeException("Training not found"));
     }
 
-    private List<Training> getAll() {
-        return trainingDao.getAllTrainings();
+    public List<Training> getAll() {
+        return trainingDao.findAllTrainings();
     }
 }
