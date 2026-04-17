@@ -2,6 +2,8 @@ package com.training.fitflow.service;
 
 import com.training.fitflow.dao.TraineeDao;
 import com.training.fitflow.model.Trainee;
+import com.training.fitflow.util.PasswordGenerator;
+import com.training.fitflow.util.UsernameGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,10 +14,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TraineeService {
     private final TraineeDao dao;
+    private final UsernameGenerator usernameGenerator;
+    private final PasswordGenerator passwordGenerator;
+
 
     public Trainee create(Trainee trainee) {
-        String username = generateUsername(trainee.getFirstName(), trainee.getLastName());
-        String password = generatePassword();
+        String username = usernameGenerator.generate(trainee.getFirstName(), trainee.getLastName());
+        String password = passwordGenerator.generate();
 
         trainee.setUsername(username);
         trainee.setPassword(password);
@@ -40,21 +45,4 @@ public class TraineeService {
     public void deleteById(Long id) {
         dao.deleteTraineeById(id);
     }
-
-    private String generateUsername(String firstName, String lastName) {
-        String base = firstName + "." + lastName;
-
-        List<Trainee> all = dao.getAllTrainees();
-
-        long count = all.stream()
-                .filter(t -> t.getUsername() != null && t.getUsername().startsWith(base))
-                .count();
-
-        return count == 0 ? base : base + count;
-    }
-
-    private String generatePassword() {
-        return UUID.randomUUID().toString().substring(0, 10);
-    }
-
 }
