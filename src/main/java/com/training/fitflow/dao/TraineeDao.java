@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class TraineeDao {
@@ -16,16 +17,17 @@ public class TraineeDao {
         this.storage = storage;
     }
 
-    public void save(Trainee trainee) {
+    public Trainee save(Trainee trainee) {
         storage.getTrainees().put(trainee.getId(), trainee);
+        return trainee;
     }
 
     public List<Trainee> getAllTrainees() {
         return storage.getTrainees().values().stream().toList();
     }
 
-    public Trainee getTraineeById(Long id) {
-        return storage.getTrainees().get(id);
+    public Optional<Trainee> getTraineeById(Long id) {
+        return Optional.ofNullable(storage.getTrainees().get(id));
     }
 
     public void deleteTraineeById(Long id) {
