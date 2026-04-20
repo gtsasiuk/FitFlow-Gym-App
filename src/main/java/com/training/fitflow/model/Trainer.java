@@ -19,7 +19,7 @@ public class Trainer extends User {
     @Override
     public String toString() {
         return "Trainer{" +
-                "specialization=" + specialization +
+                "specialization=" + specialization.getName() +
                 ", id=" + id +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
