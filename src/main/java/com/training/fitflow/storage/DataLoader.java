@@ -48,30 +48,50 @@ public class DataLoader {
     }
 
     private void loadTrainees() throws Exception {
+        log.info("Loading trainees from {}", traineesDataPath);
+
         InputStream inputStream = getClass().getResourceAsStream(traineesDataPath);
-        if (inputStream != null) {
-            List<Trainee> trainees = objectMapper.readValue(inputStream, new TypeReference<List<Trainee>>() {});
-            trainees.forEach(trainee -> storage.getTrainees().put(trainee.getId(), trainee));
-            log.info("Loaded {} trainees", trainees.size());
+        if (inputStream == null) {
+            log.warn("Trainees file not found: {}", traineesDataPath);
+            return;
         }
+
+        List<Trainee> trainees = objectMapper.readValue(inputStream, new TypeReference<List<Trainee>>() {});
+        trainees.forEach(trainee ->
+                storage.getTrainees().put(trainee.getId(), trainee)
+        );
+
+        log.info("Successfully loaded {} trainees", trainees.size());
     }
 
     private void loadTrainers() throws Exception {
+        log.info("Loading trainers from {}", trainersDataPath);
+
         InputStream inputStream = getClass().getResourceAsStream(trainersDataPath);
-        if (inputStream != null) {
-            List<Trainer> trainers = objectMapper.readValue(inputStream, new TypeReference<List<Trainer>>() {});
-            trainers.forEach(trainer -> storage.getTrainers().put(trainer.getId(), trainer));
-            log.info("Loaded {} trainers", trainers.size());
+        if (inputStream == null) {
+            log.warn("Trainers file not found: {}", trainersDataPath);
+            return;
         }
+
+        List<Trainer> trainers = objectMapper.readValue(inputStream, new TypeReference<List<Trainer>>() {});
+        trainers.forEach(trainer -> storage.getTrainers().put(trainer.getId(), trainer));
+
+        log.info("Successfully loaded {} trainers", trainers.size());
     }
 
     private void loadTrainings() throws Exception {
+        log.info("Loading trainings from {}", trainingDataPath);
+
         InputStream inputStream = getClass().getResourceAsStream(trainingDataPath);
-        if (inputStream != null) {
-            List<Training> trainings = objectMapper.readValue(inputStream, new TypeReference<List<Training>>() {});
-            trainings.forEach(training -> storage.getTrainings().put(training.getId(), training));
-            log.info("Loaded {} trainings", trainings.size());
+        if (inputStream == null) {
+            log.warn("Trainings file not found: {}", trainingDataPath);
+            return;
         }
+
+        List<Training> trainings = objectMapper.readValue(inputStream, new TypeReference<List<Training>>() {});
+        trainings.forEach(training -> storage.getTrainings().put(training.getId(), training));
+
+        log.info("Successfully loaded {} trainings", trainings.size());
     }
 }
 
