@@ -19,10 +19,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UsernameGenerator Tests")
 class UsernameGeneratorTest {
-
     @Mock
     private TraineeDao traineeDao;
-
     @Mock
     private TrainerDao trainerDao;
 

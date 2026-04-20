@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("PasswordGenerator Tests")
 class PasswordGeneratorTest {
-
     private final PasswordGenerator generator = new PasswordGenerator();
 
     @Test
