@@ -6,6 +6,7 @@ import com.training.fitflow.model.Trainee;
 import com.training.fitflow.model.Trainer;
 import com.training.fitflow.model.Training;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -21,12 +22,15 @@ public class DataLoader {
     private final InMemoryStorage storage;
     private final ObjectMapper objectMapper;
 
+    @Setter
     @Value("${storage.trainees.file}")
     private String traineesDataPath;
 
+    @Setter
     @Value("${storage.trainers.file}")
     private String trainersDataPath;
 
+    @Setter
     @Value("${storage.training.file}")
     private String trainingDataPath;
 
