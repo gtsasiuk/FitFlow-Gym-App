@@ -16,5 +16,32 @@
     "password": "trainerpass2",
     "active": true,
     "specialization": "YOGA"
+  },
+  {
+    "id": 3,
+    "firstName": "David",
+    "lastName": "Miller",
+    "username": "David.Miller",
+    "password": "trainerpass3",
+    "active": true,
+    "specialization": "ZUMBA"
+  },
+  {
+    "id": 4,
+    "firstName": "Laura",
+    "lastName": "Garcia",
+    "username": "Laura.Garcia",
+    "password": "trainerpass4",
+    "active": false,
+    "specialization": "RESISTANCE"
+  },
+  {
+    "id": 5,
+    "firstName": "Chris",
+    "lastName": "Martinez",
+    "username": "Chris.Martinez",
+    "password": "trainerpass5",
+    "active": true,
+    "specialization": "FITNESS"
   }
 ]

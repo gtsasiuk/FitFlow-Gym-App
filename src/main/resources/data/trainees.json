@@ -18,5 +18,35 @@
     "active": true,
     "dateOfBirth": "1992-08-22",
     "address": "456 Oak Ave, Los Angeles, CA"
+  },
+  {
+    "id": 3,
+    "firstName": "Alex",
+    "lastName": "Brown",
+    "username": "Alex.Brown",
+    "password": "pass789123",
+    "active": true,
+    "dateOfBirth": "1988-03-10",
+    "address": "789 Pine Rd, Chicago, IL"
+  },
+  {
+    "id": 4,
+    "firstName": "Emily",
+    "lastName": "Davis",
+    "username": "Emily.Davis",
+    "password": "pass321654",
+    "active": false,
+    "dateOfBirth": "1995-11-05",
+    "address": "321 Cedar St, Houston, TX"
+  },
+  {
+    "id": 5,
+    "firstName": "Michael",
+    "lastName": "Wilson",
+    "username": "Michael.Wilson",
+    "password": "pass654987",
+    "active": true,
+    "dateOfBirth": "1991-07-19",
+    "address": "654 Birch Ln, Phoenix, AZ"
   }
 ]
