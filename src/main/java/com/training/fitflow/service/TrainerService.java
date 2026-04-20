@@ -54,10 +54,11 @@ public class TrainerService {
 
     public Trainer getById(Long id) {
         log.debug("Fetching trainer by id={}", id);
-        return dao.findTrainerById(id).orElseThrow(() -> {
-            log.warn("Trainer not found id={}", id);
-            return new RuntimeException("Trainer not found");
-        });
+        return dao.findTrainerById(id)
+                .orElseThrow(() -> {
+                    log.warn("Trainer not found id={}", id);
+                    return new RuntimeException("Trainer not found");
+                });
     }
 
     public List<Trainer> getAll() {
