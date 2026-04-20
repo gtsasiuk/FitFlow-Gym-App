@@ -6,7 +6,6 @@ import java.time.LocalDate;
 
 @Getter
 @Setter
-@ToString
 @AllArgsConstructor
 @NoArgsConstructor
 public class Training {
@@ -17,4 +16,17 @@ public class Training {
     private TrainingType type;
     private LocalDate date;
     private Integer duration;
+
+    @Override
+    public String toString() {
+        return "Training{" +
+                "id=" + id +
+                ", traineeId=" + traineeId +
+                ", trainerId=" + trainerId +
+                ", name='" + name + '\'' +
+                ", type=" + type.getName() +
+                ", date=" + date +
+                ", duration=" + duration +
+                " minutes }";
+    }
 }
