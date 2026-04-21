@@ -1,6 +1,7 @@
 package com.training.fitflow.service;
 
 import com.training.fitflow.dao.TrainerDao;
+import com.training.fitflow.exception.TrainerNotFoundException;
 import com.training.fitflow.model.Trainer;
 import com.training.fitflow.util.PasswordGenerator;
 import com.training.fitflow.util.UsernameGenerator;
@@ -57,7 +58,7 @@ public class TrainerService {
         return dao.findTrainerById(id)
                 .orElseThrow(() -> {
                     log.warn("Trainer not found id={}", id);
-                    return new RuntimeException("Trainer not found");
+                    return new TrainerNotFoundException(id);
                 });
     }
 

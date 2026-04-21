@@ -3,6 +3,9 @@ package com.training.fitflow.service;
 import com.training.fitflow.dao.TraineeDao;
 import com.training.fitflow.dao.TrainerDao;
 import com.training.fitflow.dao.TrainingDao;
+import com.training.fitflow.exception.TraineeNotFoundException;
+import com.training.fitflow.exception.TrainerNotFoundException;
+import com.training.fitflow.exception.TrainingNotFoundException;
 import com.training.fitflow.model.Training;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,13 +31,13 @@ public class TrainingService {
         trainerDao.findTrainerById(training.getTrainerId())
                 .orElseThrow(() -> {
                     log.warn("Trainer not found id={}", training.getTrainerId());
-                    return new RuntimeException("Trainer not found");
+                    return new TrainerNotFoundException(training.getTrainerId());
                 });
 
         traineeDao.findTraineeById(training.getTraineeId())
                 .orElseThrow(() -> {
                     log.warn("Trainee not found id={}", training.getTraineeId());
-                    return new RuntimeException("Trainee not found");
+                    return new TraineeNotFoundException(training.getTraineeId());
                 });
 
         Training saved = trainingDao.save(training);
@@ -49,7 +52,7 @@ public class TrainingService {
         return trainingDao.findTrainingById(id)
                 .orElseThrow(() -> {
                     log.warn("Training not found id={}", id);
-                    return new RuntimeException("Training not found");
+                    return new TrainingNotFoundException(id);
                 });
     }
 

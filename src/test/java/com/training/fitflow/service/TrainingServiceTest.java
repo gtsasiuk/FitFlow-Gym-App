@@ -3,6 +3,9 @@ package com.training.fitflow.service;
 import com.training.fitflow.dao.TraineeDao;
 import com.training.fitflow.dao.TrainerDao;
 import com.training.fitflow.dao.TrainingDao;
+import com.training.fitflow.exception.TraineeNotFoundException;
+import com.training.fitflow.exception.TrainerNotFoundException;
+import com.training.fitflow.exception.TrainingNotFoundException;
 import com.training.fitflow.model.Training;
 import com.training.fitflow.model.TrainingType;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,10 +69,10 @@ class TrainingServiceTest {
     void create_shouldThrowException_whenTrainerNotFound() {
         when(trainerDao.findTrainerById(20L)).thenReturn(Optional.empty());
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
+        TrainerNotFoundException ex = assertThrows(TrainerNotFoundException.class,
                 () -> service.create(training));
 
-        assertEquals("Trainer not found", ex.getMessage());
+        assertEquals("Trainer with id=20 not found", ex.getMessage());
         verify(trainingDao, never()).save(any());
     }
 
@@ -79,10 +82,10 @@ class TrainingServiceTest {
         when(trainerDao.findTrainerById(20L)).thenReturn(Optional.of(mock()));
         when(traineeDao.findTraineeById(10L)).thenReturn(Optional.empty());
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
+        TraineeNotFoundException ex = assertThrows(TraineeNotFoundException.class,
                 () -> service.create(training));
 
-        assertEquals("Trainee not found", ex.getMessage());
+        assertEquals("Trainee with id=10 not found", ex.getMessage());
         verify(trainingDao, never()).save(any());
     }
 
@@ -101,10 +104,10 @@ class TrainingServiceTest {
     void getById_shouldThrowException_whenNotFound() {
         when(trainingDao.findTrainingById(1L)).thenReturn(Optional.empty());
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
+        TrainingNotFoundException ex = assertThrows(TrainingNotFoundException.class,
                 () -> service.getById(1L));
 
-        assertEquals("Training not found", ex.getMessage());
+        assertEquals("Training with id=1 not found", ex.getMessage());
     }
 
     @Test

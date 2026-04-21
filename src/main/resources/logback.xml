@@ -6,12 +6,10 @@
         </encoder>
     </appender>
 
-    <!-- ROOT logger -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
     </root>
 
-    <!-- твій проект -->
     <logger name="com.training.fitflow" level="DEBUG"/>
 
 </configuration>

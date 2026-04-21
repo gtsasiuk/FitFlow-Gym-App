@@ -1,6 +1,7 @@
 package com.training.fitflow.service;
 
 import com.training.fitflow.dao.TraineeDao;
+import com.training.fitflow.exception.TraineeNotFoundException;
 import com.training.fitflow.model.Trainee;
 import com.training.fitflow.util.PasswordGenerator;
 import com.training.fitflow.util.UsernameGenerator;
@@ -119,10 +120,10 @@ class TraineeServiceTest {
     void getById_shouldThrowException_whenNotFound() {
         when(dao.findTraineeById(1L)).thenReturn(Optional.empty());
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
+        TraineeNotFoundException ex = assertThrows(TraineeNotFoundException.class,
                 () -> service.getById(1L));
 
-        assertEquals("Trainee not found", ex.getMessage());
+        assertEquals("Trainee with id=1 not found", ex.getMessage());
     }
 
     @Test

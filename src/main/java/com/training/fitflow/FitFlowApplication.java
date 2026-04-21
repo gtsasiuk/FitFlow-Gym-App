@@ -6,31 +6,32 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+
 @Slf4j
 public class FitFlowApplication {
     public static void main(String[] args) {
-        System.out.println("Starting FitFlow application...");
+        log.info("Starting FitFlow application...");
         ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
 
-        System.out.println("Spring context started successfully");
+        log.info("Spring context started successfully");
         GymFacade facade = context.getBean(GymFacade.class);
 
-        System.out.println("Fetching all trainees:");
-        facade.getAllTrainees().forEach(System.out::println);
+        log.debug("Fetching all trainees:, count={}", facade.getAllTrainees().size());
+        facade.getAllTrainees().forEach(trainee -> log.info("Found trainee: {}", trainee));
 
-        System.out.println("Fetching all trainers:");
-        facade.getAllTrainers().forEach(System.out::println);
+        log.debug("Fetching all trainers:, count={}", facade.getAllTrainers().size());
+        facade.getAllTrainers().forEach(trainer -> log.info("Found trainer: {}", trainer));
 
-        System.out.println("Fetching all trainings:");
-        facade.getAllTrainings().forEach(System.out::println);
+        log.debug("Fetching all trainings:, count={}", facade.getAllTrainings().size());
+        facade.getAllTrainings().forEach(training -> log.info("Found training: {}", training));
 
         try {
-            System.out.println("Attempting to fetch non-existent trainee with id=999");
+            log.debug("Attempting to fetch non-existent trainee with id=999");
             facade.getTrainee(999L);
         } catch (Exception e) {
-            System.out.println("Expected error occurred: " + e.getMessage());
+            log.error("Expected error occurred: {}", e.getMessage());
         }
 
-        System.out.println("Application finished execution");
+        log.info("Application finished execution");
     }
 }

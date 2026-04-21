@@ -1,6 +1,7 @@
 package com.training.fitflow.service;
 
 import com.training.fitflow.dao.TraineeDao;
+import com.training.fitflow.exception.TraineeNotFoundException;
 import com.training.fitflow.model.Trainee;
 import com.training.fitflow.util.PasswordGenerator;
 import com.training.fitflow.util.UsernameGenerator;
@@ -61,12 +62,12 @@ public class TraineeService {
         return dao.findTraineeById(id)
                 .orElseThrow(() -> {
                     log.warn("Trainee not found id={}", id);
-                    return new RuntimeException("Trainee not found");
+                    return new TraineeNotFoundException(id);
                 });
     }
 
     public List<Trainee> getAll() {
-        log.debug("Fetching all trainee");
+        log.debug("Fetching all trainees");
         return dao.findAllTrainees();
     }
 

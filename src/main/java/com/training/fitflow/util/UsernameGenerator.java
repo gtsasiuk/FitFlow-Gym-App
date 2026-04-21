@@ -36,7 +36,11 @@ public class UsernameGenerator {
 
     private long countExisting(String base) {
         long traineeCount = traineeDao.findAllTrainees().stream()
-                .filter(t -> t.getUsername() != null && t.getUsername().startsWith(base))
+                .filter(t -> {
+                    String username = t.getUsername();
+                    return username != null &&
+                            (username.equals(base) || username.matches(base + "\\d+"));
+                })
                 .count();
 
         long trainerCount = trainerDao.findAllTrainers().stream()
