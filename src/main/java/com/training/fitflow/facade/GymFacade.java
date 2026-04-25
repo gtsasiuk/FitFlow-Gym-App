@@ -72,8 +72,8 @@ public class GymFacade {
     public Training createTraining(Training training) {
         log.info("Facade: createTraining request name={}, trainerId={}, traineeId={}",
                 training.getName(),
-                training.getTrainerId(),
-                training.getTraineeId()
+                training.getTrainer(),
+                training.getTrainer()
         );
 
         Training result = trainingService.create(training);

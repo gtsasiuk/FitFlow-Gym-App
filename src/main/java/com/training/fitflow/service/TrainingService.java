@@ -24,20 +24,20 @@ public class TrainingService {
     public Training create(Training training) {
         log.info("Creating training: name={}, trainerId={}, traineeId={}",
                 training.getName(),
-                training.getTrainerId(),
-                training.getTraineeId()
+                training.getTrainer(),
+                training.getTrainee()
         );
 
-        trainerDao.findTrainerById(training.getTrainerId())
+        trainerDao.findTrainerById(training.getTrainer().getId())
                 .orElseThrow(() -> {
-                    log.warn("Trainer not found id={}", training.getTrainerId());
-                    return new TrainerNotFoundException(training.getTrainerId());
+                    log.warn("Trainer not found id={}", training.getTrainer());
+                    return new TrainerNotFoundException(training.getTrainer().getId());
                 });
 
-        traineeDao.findTraineeById(training.getTraineeId())
+        traineeDao.findTraineeById(training.getTrainee().getId())
                 .orElseThrow(() -> {
-                    log.warn("Trainee not found id={}", training.getTraineeId());
-                    return new TraineeNotFoundException(training.getTraineeId());
+                    log.warn("Trainee not found id={}", training.getTrainee());
+                    return new TraineeNotFoundException(training.getTrainee().getId());
                 });
 
         Training saved = trainingDao.save(training);
