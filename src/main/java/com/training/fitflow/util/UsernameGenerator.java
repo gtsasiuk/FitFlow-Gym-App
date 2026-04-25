@@ -1,7 +1,7 @@
 package com.training.fitflow.util;
 
-import com.training.fitflow.dao.TraineeDao;
-import com.training.fitflow.dao.TrainerDao;
+import com.training.fitflow.repository.TraineeRepository;
+import com.training.fitflow.repository.TrainerRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -9,17 +9,17 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class UsernameGenerator {
-    private TraineeDao traineeDao;
-    private TrainerDao trainerDao;
+    private TraineeRepository traineeRepository;
+    private TrainerRepository trainerRepository;
 
     @Autowired
-    public void setTraineeDao(TraineeDao traineeDao) {
-        this.traineeDao = traineeDao;
+    public void setTraineeRepository(TraineeRepository traineeRepository) {
+        this.traineeRepository = traineeRepository;
     }
 
     @Autowired
-    public void setTrainerDao(TrainerDao trainerDao) {
-        this.trainerDao = trainerDao;
+    public void setTrainerRepository(TrainerRepository trainerRepository) {
+        this.trainerRepository = trainerRepository;
     }
 
     public String generate(String firstName, String lastName) {
@@ -35,7 +35,7 @@ public class UsernameGenerator {
     }
 
     private long countExisting(String base) {
-        long traineeCount = traineeDao.findAllTrainees().stream()
+        long traineeCount = traineeRepository.findAll().stream()
                 .filter(t -> {
                     String username = t.getUsername();
                     return username != null &&
@@ -43,7 +43,7 @@ public class UsernameGenerator {
                 })
                 .count();
 
-        long trainerCount = trainerDao.findAllTrainers().stream()
+        long trainerCount = trainerRepository.findAll().stream()
                 .filter(t -> t.getUsername() != null && t.getUsername().startsWith(base))
                 .count();
 
