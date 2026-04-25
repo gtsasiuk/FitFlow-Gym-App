@@ -27,7 +27,7 @@ public class FitFlowApplication {
 
         try {
             log.debug("Attempting to fetch non-existent trainee with id=999");
-            facade.getTrainee(999L);
+            facade.getTrainee("eugene.tsasiuk");
         } catch (Exception e) {
             log.error("Expected error occurred: {}", e.getMessage());
         }

@@ -34,9 +34,9 @@ public class GymFacade {
         return result;
     }
 
-    public Trainee getTrainee(Long id) {
-        log.debug("Facade: getTrainee id={}", id);
-        return traineeService.getById(id);
+    public Trainee getTrainee(String username) {
+        log.debug("Facade: getTrainee username={}", username);
+        return traineeService.getByUsername(username);
     }
 
     public List<Trainee> getAllTrainees() {
@@ -44,9 +44,9 @@ public class GymFacade {
         return traineeService.getAll();
     }
 
-    public void deleteTrainee(Long id) {
-        log.info("Facade: deleteTrainee id={}", id);
-        traineeService.deleteById(id);
+    public void deleteTrainee(String username) {
+        log.info("Facade: deleteTrainee id={}", username);
+        traineeService.deleteByUsername(username);
     }
 
     public Trainer createTrainer(Trainer trainer) {
