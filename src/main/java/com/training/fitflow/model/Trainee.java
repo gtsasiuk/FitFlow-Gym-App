@@ -1,15 +1,12 @@
 package com.training.fitflow.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Entity
 @Table(name = "trainees")
@@ -29,6 +26,13 @@ public class Trainee extends User {
     private LocalDate dateOfBirth;
     @Column(name = "address")
     private String address;
+    @ManyToMany
+    @JoinTable(
+            name = "trainee_trainer",
+            joinColumns = @JoinColumn(name = "trainee_id"),
+            inverseJoinColumns = @JoinColumn(name = "trainer_id")
+    )
+    private Set<Trainer> trainers;
 
     @Override
     public String toString() {

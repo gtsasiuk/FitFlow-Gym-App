@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Set;
+
 @Entity
 @Table(name = "trainers")
 @Getter
@@ -21,6 +23,8 @@ public class Trainer extends User {
     @ManyToOne
     @JoinColumn(name = "specialization_id", nullable = false)
     private TrainingType specialization;
+    @ManyToMany(mappedBy = "trainers")
+    private Set<Trainee> trainees;
 
     @Override
     public String toString() {
