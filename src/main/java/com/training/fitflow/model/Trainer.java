@@ -1,9 +1,6 @@
 package com.training.fitflow.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,7 +18,8 @@ public class Trainer extends User {
         this.specialization = specialization;
     }
 
-    @Enumerated(EnumType.STRING)
+    @ManyToOne
+    @JoinColumn(name = "specialization_id", nullable = false)
     private TrainingType specialization;
 
     @Override
