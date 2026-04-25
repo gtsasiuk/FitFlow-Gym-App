@@ -110,7 +110,7 @@ class TraineeServiceTest {
     void getById_shouldReturnTrainee_whenExists() {
         when(dao.findTraineeById(1L)).thenReturn(Optional.of(trainee));
 
-        Trainee result = service.getById(1L);
+        Trainee result = service.getByUsername(1L);
 
         assertEquals(trainee, result);
     }
@@ -121,7 +121,7 @@ class TraineeServiceTest {
         when(dao.findTraineeById(1L)).thenReturn(Optional.empty());
 
         TraineeNotFoundException ex = assertThrows(TraineeNotFoundException.class,
-                () -> service.getById(1L));
+                () -> service.getByUsername(1L));
 
         assertEquals("Trainee with id=1 not found", ex.getMessage());
     }

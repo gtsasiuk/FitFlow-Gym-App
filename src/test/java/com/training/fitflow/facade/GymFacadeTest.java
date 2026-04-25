@@ -50,7 +50,7 @@ public class GymFacadeTest {
     @DisplayName("GetTrainee → should return trainee from service")
     void getTrainee_shouldReturn() {
         Trainee trainee = new Trainee();
-        when(traineeService.getById(1L)).thenReturn(trainee);
+        when(traineeService.getByUsername(1L)).thenReturn(trainee);
 
         Trainee result = facade.getTrainee(1L);
 

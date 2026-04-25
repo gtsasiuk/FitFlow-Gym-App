@@ -59,9 +59,9 @@ public class GymFacade {
         return result;
     }
 
-    public Trainer getTrainer(Long id) {
-        log.debug("Facade: getTrainer id={}", id);
-        return trainerService.getById(id);
+    public Trainer getTrainer(String username) {
+        log.debug("Facade: getTrainer id={}", username);
+        return trainerService.getByUsername(username);
     }
 
     public List<Trainer> getAllTrainers() {

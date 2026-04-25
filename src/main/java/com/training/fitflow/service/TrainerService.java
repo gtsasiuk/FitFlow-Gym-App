@@ -1,8 +1,8 @@
 package com.training.fitflow.service;
 
-import com.training.fitflow.dao.TrainerDao;
 import com.training.fitflow.exception.TrainerNotFoundException;
 import com.training.fitflow.model.Trainer;
+import com.training.fitflow.repository.TrainerRepository;
 import com.training.fitflow.util.PasswordGenerator;
 import com.training.fitflow.util.UsernameGenerator;
 import com.training.fitflow.util.UserUpdateUtil;
@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class TrainerService {
-    private final TrainerDao dao;
+    private final TrainerRepository repository;
     private final UsernameGenerator usernameGenerator;
     private final PasswordGenerator passwordGenerator;
 
@@ -32,7 +32,7 @@ public class TrainerService {
         trainer.setPassword(password);
         trainer.setActive(true);
 
-        Trainer saved = dao.save(trainer);
+        Trainer saved = repository.save(trainer);
 
         log.info("Trainer created successfully with id={}", saved.getId());
 
@@ -42,28 +42,28 @@ public class TrainerService {
     public Trainer update(Trainer trainer) {
         log.info("Updating trainer id={}", trainer.getId());
 
-        Trainer existingTrainer = getById(trainer.getId());
+        Trainer existingTrainer = getByUsername(trainer.getUsername());
         UserUpdateUtil.updateNameFields(existingTrainer, trainer.getFirstName(), trainer.getLastName(), usernameGenerator);
         existingTrainer.setSpecialization(trainer.getSpecialization());
 
-        Trainer updated = dao.save(existingTrainer);
+        Trainer updated = repository.save(existingTrainer);
 
         log.info("Trainer updated successfully id={}", updated.getId());
 
         return updated;
     }
 
-    public Trainer getById(Long id) {
-        log.debug("Fetching trainer by id={}", id);
-        return dao.findTrainerById(id)
+    public Trainer getByUsername(String username) {
+        log.debug("Fetching trainer by id={}", username);
+        return repository.findByUsername(username)
                 .orElseThrow(() -> {
-                    log.warn("Trainer not found id={}", id);
-                    return new TrainerNotFoundException(id);
+                    log.warn("Trainer not found id={}", username);
+                    return new TrainerNotFoundException(username);
                 });
     }
 
     public List<Trainer> getAll() {
         log.debug("Fetching all trainers");
-        return dao.findAllTrainers();
+        return repository.findAll();
     }
 }
