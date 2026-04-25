@@ -43,12 +43,12 @@ class DataLoaderTest {
 
         List<Trainer> trainers = List.of(
                 new Trainer(1L, "Mike", "Tyson", "u", "p", true,
-                        TrainingType.FITNESS)
+                        new TrainingType())
         );
 
         List<Training> trainings = List.of(
-                new Training(1L, 1L, 1L, "Training",
-                        TrainingType.FITNESS,
+                new Training(1L, new Trainee(), new Trainer(), "Training",
+                        new TrainingType(),
                         LocalDate.of(2025,1,1),
                         60)
         );

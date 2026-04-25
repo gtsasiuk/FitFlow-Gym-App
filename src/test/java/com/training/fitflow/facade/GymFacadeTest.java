@@ -50,9 +50,9 @@ public class GymFacadeTest {
     @DisplayName("GetTrainee → should return trainee from service")
     void getTrainee_shouldReturn() {
         Trainee trainee = new Trainee();
-        when(traineeService.getByUsername(1L)).thenReturn(trainee);
+        when(traineeService.getByUsername("John.Doe")).thenReturn(trainee);
 
-        Trainee result = facade.getTrainee(1L);
+        Trainee result = facade.getTrainee("John.Doe");
 
         assertEquals(trainee, result);
     }
@@ -70,9 +70,9 @@ public class GymFacadeTest {
     @Test
     @DisplayName("DeleteTrainee → should call service delete")
     void deleteTrainee_shouldCallService() {
-        facade.deleteTrainee(1L);
+        facade.deleteTrainee("John.Doe");
 
-        verify(traineeService).deleteById(1L);
+        verify(traineeService).deleteByUsername("John.Doe");
     }
 
     @Test
@@ -91,9 +91,9 @@ public class GymFacadeTest {
     @DisplayName("GetTrainer → should return trainer")
     void getTrainer_shouldReturn() {
         Trainer trainer = new Trainer();
-        when(trainerService.getById(1L)).thenReturn(trainer);
+        when(trainerService.getByUsername("John.Doe")).thenReturn(trainer);
 
-        Trainer result = facade.getTrainer(1L);
+        Trainer result = facade.getTrainer("John.Doe");
 
         assertEquals(trainer, result);
     }
@@ -112,9 +112,9 @@ public class GymFacadeTest {
     @DisplayName("CreateTraining → should delegate to service")
     void createTraining_shouldDelegate() {
         Training training = new Training(
-                1L, 1L, 1L,
+                1L, new Trainee(), new Trainer(),
                 "Test",
-                TrainingType.FITNESS,
+                new TrainingType(1L, "Fitness"),
                 LocalDate.now(),
                 60
         );
