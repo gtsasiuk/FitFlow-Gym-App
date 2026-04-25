@@ -1,9 +1,15 @@
 package com.training.fitflow.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Entity
+@Table(name = "trainers")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -14,6 +20,8 @@ public class Trainer extends User {
         super(id, firstName, lastName, username, password, isActive);
         this.specialization = specialization;
     }
+
+    @Enumerated(EnumType.STRING)
     private TrainingType specialization;
 
     @Override

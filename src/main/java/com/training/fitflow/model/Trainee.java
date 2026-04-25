@@ -1,5 +1,9 @@
 package com.training.fitflow.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -7,6 +11,8 @@ import lombok.ToString;
 
 import java.time.LocalDate;
 
+@Entity
+@Table(name = "trainees")
 @Setter
 @Getter
 @NoArgsConstructor
@@ -18,7 +24,10 @@ public class Trainee extends User {
         this.dateOfBirth = dateOfBirth;
         this.address = address;
     }
+
+    @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
+    @Column(name = "address")
     private String address;
 
     @Override
