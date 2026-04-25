@@ -54,10 +54,10 @@ public class TrainerService {
     }
 
     public Trainer getByUsername(String username) {
-        log.debug("Fetching trainer by id={}", username);
+        log.debug("Fetching trainer by username={}", username);
         return repository.findByUsername(username)
                 .orElseThrow(() -> {
-                    log.warn("Trainer not found id={}", username);
+                    log.warn("Trainer not found username={}", username);
                     return new TrainerNotFoundException(username);
                 });
     }

@@ -1,9 +1,9 @@
 package com.training.fitflow.service;
 
-import com.training.fitflow.dao.TrainerDao;
 import com.training.fitflow.exception.TrainerNotFoundException;
 import com.training.fitflow.model.Trainer;
 import com.training.fitflow.model.TrainingType;
+import com.training.fitflow.repository.TrainerRepository;
 import com.training.fitflow.util.PasswordGenerator;
 import com.training.fitflow.util.UsernameGenerator;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,13 +21,10 @@ import static org.mockito.Mockito.*;
 @ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
 @DisplayName("TrainerService Tests")
 class TrainerServiceTest {
-
     @Mock
-    private TrainerDao dao;
-
+    private TrainerRepository repository;
     @Mock
     private UsernameGenerator usernameGenerator;
-
     @Mock
     private PasswordGenerator passwordGenerator;
 
@@ -35,18 +32,17 @@ class TrainerServiceTest {
     private TrainerService service;
 
     private Trainer trainer;
+    private TrainingType type;
 
     @BeforeEach
     void setUp() {
-        trainer = new Trainer(
-                1L,
-                "John",
-                "Doe",
-                null,
-                null,
-                null,
-                TrainingType.YOGA
-        );
+        type = new TrainingType(1L, "Yoga");
+
+        trainer = new Trainer();
+        trainer.setId(1L);
+        trainer.setFirstName("John");
+        trainer.setLastName("Doe");
+        trainer.setSpecialization(type);
     }
 
     @Test
@@ -54,7 +50,7 @@ class TrainerServiceTest {
     void create_shouldGenerateUsernamePasswordAndSaveTrainer() {
         when(usernameGenerator.generate("John", "Doe")).thenReturn("John.Doe");
         when(passwordGenerator.generate()).thenReturn("password123");
-        when(dao.save(any(Trainer.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(repository.save(any(Trainer.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Trainer result = service.create(trainer);
 
@@ -64,7 +60,7 @@ class TrainerServiceTest {
                 () -> assertTrue(result.getActive())
         );
 
-        verify(dao).save(trainer);
+        verify(repository).save(trainer);
     }
 
     @Test
@@ -72,21 +68,21 @@ class TrainerServiceTest {
     void update_shouldUpdateSpecializationWithoutChangingUsernameIfNameSame() {
         Trainer existing = new Trainer(
                 1L, "John", "Doe", "John.Doe", "pass", true,
-                TrainingType.YOGA
+                type
         );
 
-        when(dao.findTrainerById(1L)).thenReturn(Optional.of(existing));
-        when(dao.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(repository.findByUsername("John.Doe")).thenReturn(Optional.of(existing));
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         trainer.setFirstName("John");
         trainer.setLastName("Doe");
-        trainer.setSpecialization(TrainingType.YOGA);
+        trainer.setSpecialization(type);
 
         Trainer result = service.update(trainer);
 
         assertAll(
                 () -> assertEquals("John.Doe", result.getUsername()),
-                () -> assertEquals(TrainingType.YOGA, result.getSpecialization())
+                () -> assertEquals(type, result.getSpecialization())
         );
     }
 
@@ -95,12 +91,12 @@ class TrainerServiceTest {
     void update_shouldRegenerateUsernameIfNameChanged() {
         Trainer existing = new Trainer(
                 1L, "John", "Doe", "John.Doe", "pass", true,
-                TrainingType.YOGA
+                type
         );
 
-        when(dao.findTrainerById(1L)).thenReturn(Optional.of(existing));
+        when(repository.findByUsername("John.Doe")).thenReturn(Optional.of(existing));
         when(usernameGenerator.generate("Jane", "Smith")).thenReturn("Jane.Smith");
-        when(dao.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         trainer.setFirstName("Jane");
         trainer.setLastName("Smith");
@@ -111,50 +107,40 @@ class TrainerServiceTest {
     }
 
     @Test
-    @DisplayName("GetById → should return trainer when exists")
+    @DisplayName("GetByUsername → should return trainer when exists")
     void getById_shouldReturnTrainer_whenExists() {
-        when(dao.findTrainerById(1L)).thenReturn(Optional.of(trainer));
+        when(repository.findByUsername("John.Doe")).thenReturn(Optional.of(trainer));
 
-        Trainer result = service.getById(1L);
+        Trainer result = service.getByUsername("John.Doe");
 
         assertEquals(trainer, result);
     }
 
     @Test
-    @DisplayName("GetById → should throw exception when trainer not found")
+    @DisplayName("GetByUsername → should throw exception when trainer not found")
     void getById_shouldThrowException_whenNotFound() {
-        when(dao.findTrainerById(1L)).thenReturn(Optional.empty());
+        when(repository.findByUsername("John.Doe")).thenReturn(Optional.empty());
 
         TrainerNotFoundException ex = assertThrows(TrainerNotFoundException.class,
-                () -> service.getById(1L));
+                () -> service.getByUsername("John.Doe"));
 
-        assertEquals("Trainer with id=1 not found", ex.getMessage());
+        assertEquals("Trainer with username=John.Doe not found", ex.getMessage());
     }
 
     @Test
     @DisplayName("GetAll → should return list of trainers")
     void getAll_shouldReturnAllTrainers() {
-        when(dao.findAllTrainers()).thenReturn(List.of(trainer));
+        when(repository.findAll()).thenReturn(List.of(trainer));
 
         List<Trainer> result = service.getAll();
 
         assertEquals(1, result.size());
-        verify(dao).findAllTrainers();
+        verify(repository).findAll();
     }
 
     @Test
     @DisplayName("Trainer.toString() → should contain all main fields")
     void toString_shouldContainAllFields() {
-        Trainer trainer = new Trainer(
-                1L,
-                "John",
-                "Doe",
-                "John.Doe",
-                "password",
-                true,
-                TrainingType.YOGA
-        );
-
         String result = trainer.toString();
 
         assertAll(
