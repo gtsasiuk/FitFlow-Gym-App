@@ -61,7 +61,7 @@ public class TraineeService {
 
         return repository.findByUsername(username)
                 .orElseThrow(() -> {
-                    log.warn("Trainee not found id={}", username);
+                    log.warn("Trainee not found username={}", username);
                     return new TraineeNotFoundException(username);
                 });
     }

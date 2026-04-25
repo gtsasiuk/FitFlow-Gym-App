@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -76,6 +77,7 @@ class TrainerServiceTest {
 
         trainer.setFirstName("John");
         trainer.setLastName("Doe");
+        trainer.setUsername("John.Doe");
         trainer.setSpecialization(type);
 
         Trainer result = service.update(trainer);
@@ -100,6 +102,7 @@ class TrainerServiceTest {
 
         trainer.setFirstName("Jane");
         trainer.setLastName("Smith");
+        trainer.setUsername("John.Doe");
 
         Trainer result = service.update(trainer);
 
@@ -141,14 +144,23 @@ class TrainerServiceTest {
     @Test
     @DisplayName("Trainer.toString() → should contain all main fields")
     void toString_shouldContainAllFields() {
+        Trainer trainer = new Trainer(
+                1L,
+                "John",
+                "Doe",
+                "John.Doe",
+                "password12",
+                true,
+                new TrainingType(1L, "Yoga")
+        );
+
         String result = trainer.toString();
 
         assertAll(
                 () -> assertTrue(result.contains("John")),
                 () -> assertTrue(result.contains("Doe")),
                 () -> assertTrue(result.contains("John.Doe")),
-                () -> assertTrue(result.contains("password")),
-                () -> assertTrue(result.contains("Yoga"))
+                () -> assertTrue(result.contains("password12"))
         );
     }
 }

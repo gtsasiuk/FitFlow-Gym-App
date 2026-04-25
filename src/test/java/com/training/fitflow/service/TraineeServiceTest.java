@@ -78,6 +78,7 @@ class TraineeServiceTest {
         trainee.setFirstName("John");
         trainee.setLastName("Doe");
         trainee.setAddress("New address");
+        trainee.setUsername("John.Doe");
 
         Trainee result = service.update(trainee);
 
@@ -99,6 +100,7 @@ class TraineeServiceTest {
 
         trainee.setFirstName("Jane");
         trainee.setLastName("Smith");
+        trainee.setUsername("John.Doe");
 
         Trainee result = service.update(trainee);
 
