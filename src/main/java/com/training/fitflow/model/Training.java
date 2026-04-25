@@ -38,7 +38,7 @@ public class Training {
                 ", traineeId=" + (trainee != null ? trainee.getId() : null) +
                 ", trainerId=" + (trainer != null ? trainer.getId() : null) +
                 ", name='" + name + '\'' +
-                ", type=" + type.getName() +
+                ", type=" + (type != null ? type.getId() : null) +
                 ", date=" + date +
                 ", duration=" + duration +
                 " minutes }";

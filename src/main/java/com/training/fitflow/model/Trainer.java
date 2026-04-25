@@ -29,13 +29,13 @@ public class Trainer extends User {
     @Override
     public String toString() {
         return "Trainer{" +
-                "specialization=" + specialization.getName() +
-                ", id=" + id +
+                "id=" + id +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 ", active=" + active +
+                ", specializationId=" + (specialization != null ? specialization.getId() : null) +
                 '}';
     }
 }
