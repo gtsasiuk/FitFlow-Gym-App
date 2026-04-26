@@ -13,7 +13,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -121,6 +123,32 @@ public class TraineeService {
                     log.warn("Trainee not found username={}", username);
                     return new TraineeNotFoundException(username);
                 });
+    }
+
+    @Transactional
+    public void updateTraineeTrainers(String username, List<Long> trainerIds) {
+        log.info("Updating trainee trainers list username={}, trainerIds={}", username, trainerIds);
+
+        Trainee trainee = traineeRepository.findByUsername(username)
+                .orElseThrow(() -> {
+                    log.warn("Trainee not found when updating trainers list username={}", username);
+                    return new TraineeNotFoundException(username);
+                });
+
+        Set<Trainer> newTrainers = new HashSet<>(
+                trainerRepository.findAllById(trainerIds)
+        );
+
+        log.debug("Fetched trainers for assignment username={}, found={}/{}",
+                username, newTrainers.size(), trainerIds.size());
+
+        int beforeSize = trainee.getTrainers() != null ? trainee.getTrainers().size() : 0;
+
+        trainee.getTrainers().clear();
+        trainee.getTrainers().addAll(newTrainers);
+
+        log.info("Trainee trainers updated successfully username={}, beforeCount={}, afterCount={}",
+                username, beforeSize, newTrainers.size());
     }
 
     public List<Trainer> getUnassignedTrainers(String username) {

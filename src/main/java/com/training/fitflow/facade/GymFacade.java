@@ -75,6 +75,16 @@ public class GymFacade {
         traineeService.deactivate(authTrainee.getUsername());
     }
 
+    public void updateTraineeTrainers(String username, String password, List<Long> trainerIds) {
+        loginTrainee(username, password);
+
+        log.info("Facade: update trainee trainers username={}, trainerIds={}", username, trainerIds);
+
+        traineeService.updateTraineeTrainers(username, trainerIds);
+
+        log.info("Facade: trainee trainers updated username={}", username);
+    }
+
     public Trainee getTrainee(String username, String password) {
         Trainee authTrainee = loginTrainee(username, password);
         log.debug("Facade: getTrainee username={}", username);
