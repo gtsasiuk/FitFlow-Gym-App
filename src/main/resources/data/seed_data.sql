@@ -31,3 +31,10 @@ INSERT INTO trainings (id, trainee_id, trainer_id, training_name, training_type_
 (3, 2, 8, 'Zumba Dance', 3, '2026-04-22', 45),
 (4, 5, 9, 'Strength Training', 5, '2026-04-23', 50),
 (5, 5, 10, 'Full Body Fitness', 1, '2026-04-24', 70);
+
+INSERT INTO trainee_trainer (trainee_id, trainer_id) VALUES
+(3, 6),
+(1, 7),
+(2, 8),
+(5, 9),
+(5, 10);

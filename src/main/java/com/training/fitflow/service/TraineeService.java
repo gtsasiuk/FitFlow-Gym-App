@@ -2,7 +2,9 @@ package com.training.fitflow.service;
 
 import com.training.fitflow.exception.TraineeNotFoundException;
 import com.training.fitflow.model.Trainee;
+import com.training.fitflow.model.Trainer;
 import com.training.fitflow.repository.TraineeRepository;
+import com.training.fitflow.repository.TrainerRepository;
 import com.training.fitflow.util.PasswordGenerator;
 import com.training.fitflow.util.UsernameGenerator;
 import com.training.fitflow.util.UserUpdateUtil;
@@ -17,7 +19,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class TraineeService {
-    private final TraineeRepository repository;
+    private final TraineeRepository traineeRepository;
+    private final TrainerRepository trainerRepository;
     private final UsernameGenerator usernameGenerator;
     private final PasswordGenerator passwordGenerator;
 
@@ -34,7 +37,7 @@ public class TraineeService {
         trainee.setPassword(password);
         trainee.setActive(true);
 
-        Trainee saved = repository.save(trainee);
+        Trainee saved = traineeRepository.save(trainee);
         log.info("Trainee created successfully with id={}", saved.getId());
 
         return saved;
@@ -44,7 +47,7 @@ public class TraineeService {
     public Trainee update(Trainee trainee) {
         log.info("Updating trainee with id={}", trainee.getId());
 
-        Trainee existingTrainee = repository.findById(trainee.getId())
+        Trainee existingTrainee = traineeRepository.findById(trainee.getId())
                 .orElseThrow(() -> {
                     log.warn("Trainee not found id={}", trainee.getId());
                     return new TraineeNotFoundException(trainee.getUsername());
@@ -55,7 +58,7 @@ public class TraineeService {
         existingTrainee.setAddress(trainee.getAddress());
         existingTrainee.setDateOfBirth(trainee.getDateOfBirth());
 
-        Trainee updated = repository.save(existingTrainee);
+        Trainee updated = traineeRepository.save(existingTrainee);
 
         log.info("Trainee updated successfully id={}", updated.getId());
 
@@ -66,12 +69,12 @@ public class TraineeService {
     public void changePassword(String username, String newPassword) {
         log.info("Changing password for trainee username={}", username);
 
-        Trainee trainee = repository.findByUsername(username)
+        Trainee trainee = traineeRepository.findByUsername(username)
                 .orElseThrow(() -> new TraineeNotFoundException(username));
 
         trainee.setPassword(newPassword);
 
-        repository.save(trainee);
+        traineeRepository.save(trainee);
 
         log.info("Password changed successfully for username={}", username);
     }
@@ -80,7 +83,7 @@ public class TraineeService {
     public void activate(String username) {
         log.info("Activating trainee username={}", username);
 
-        Trainee trainee = repository.findByUsername(username)
+        Trainee trainee = traineeRepository.findByUsername(username)
                 .orElseThrow(() -> new TraineeNotFoundException(username));
 
         if (trainee.getActive()) {
@@ -88,7 +91,7 @@ public class TraineeService {
         }
 
         trainee.setActive(true);
-        repository.save(trainee);
+        traineeRepository.save(trainee);
 
         log.info("Trainee activated username={}", username);
     }
@@ -97,7 +100,7 @@ public class TraineeService {
     public void deactivate(String username) {
         log.info("Deactivating trainee username={}", username);
 
-        Trainee trainee = repository.findByUsername(username)
+        Trainee trainee = traineeRepository.findByUsername(username)
                 .orElseThrow(() -> new TraineeNotFoundException(username));
 
         if (!trainee.getActive()) {
@@ -105,7 +108,7 @@ public class TraineeService {
         }
 
         trainee.setActive(false);
-        repository.save(trainee);
+        traineeRepository.save(trainee);
 
         log.info("Trainee deactivated username={}", username);
     }
@@ -113,21 +116,29 @@ public class TraineeService {
     public Trainee getByUsername(String username) {
         log.debug("Fetching trainee by username={}", username);
 
-        return repository.findByUsername(username)
+        return traineeRepository.findByUsername(username)
                 .orElseThrow(() -> {
                     log.warn("Trainee not found username={}", username);
                     return new TraineeNotFoundException(username);
                 });
     }
 
+    public List<Trainer> getUnassignedTrainers(String username) {
+        log.debug("Fetching all unassigned trainers for trainee by username={}", username);
+        Trainee trainee = traineeRepository.findByUsername(username)
+                .orElseThrow(() -> new TraineeNotFoundException(username));
+
+        return trainerRepository.findNotAssignedToTrainee(trainee.getUsername());
+    }
+
     public List<Trainee> getAll() {
         log.debug("Fetching all trainees");
-        return repository.findAll();
+        return traineeRepository.findAll();
     }
 
     @Transactional
     public void deleteByUsername(String username) {
         log.info("Deleting trainee username={}", username);
-        repository.deleteByUsername(username);
+        traineeRepository.deleteByUsername(username);
     }
 }

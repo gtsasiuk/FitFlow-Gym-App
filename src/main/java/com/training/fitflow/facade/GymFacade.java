@@ -81,6 +81,12 @@ public class GymFacade {
         return traineeService.getByUsername(authTrainee.getUsername());
     }
 
+    public List<Trainer> getAvailableTrainersForTrainee(String username, String password) {
+        loginTrainee(username, password);
+        log.debug("Facade: getAvailableTrainersForTrainee username={}", username);
+        return traineeService.getUnassignedTrainers(username);
+    }
+
     public List<Trainee> getAllTrainees(String username, String password) {
         loginTrainee(username, password);
         log.debug("Facade: getAllTrainees request");
