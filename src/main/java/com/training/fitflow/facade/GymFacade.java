@@ -57,9 +57,21 @@ public class GymFacade {
     }
 
     public void changeTraineePassword(String username, String oldPassword, String newPassword) {
-        Trainee authUser = authService.authenticateTrainee(username, oldPassword);
-        log.info("Facade: change trainee password request for id={}", authUser.getId());
-        traineeService.changePassword(authUser.getUsername(), newPassword);
+        Trainee authTrainee = authService.authenticateTrainee(username, oldPassword);
+        log.info("Facade: change trainee password request for id={}", authTrainee.getId());
+        traineeService.changePassword(authTrainee.getUsername(), newPassword);
+    }
+
+    public void activateTrainee(String username, String password) {
+        Trainee authUser = loginTrainee(username, password);
+        log.info("Facade: activate user request for id={}", authUser.getId());
+        traineeService.activate(authUser.getUsername());
+    }
+
+    public void deactivateTrainee(String username, String password) {
+        Trainee authTrainee = loginTrainee(username, password);
+        log.info("Facade: deactivate user request for id={}", authTrainee.getId());
+        traineeService.deactivate(authTrainee.getUsername());
     }
 
     public Trainee getTrainee(String username, String password) {
@@ -101,20 +113,19 @@ public class GymFacade {
     }
 
     public void changeTrainerPassword(String username, String oldPassword, String newPassword) {
-        Trainee authUser = authService.authenticateTrainee(username, oldPassword);
-        log.info("Facade: change trainer password request for id={}", authUser.getId());
-        traineeService.changePassword(authUser.getUsername(), newPassword);
+        Trainer authTrainer = authService.authenticateTrainer(username, oldPassword);
+        log.info("Facade: change trainer password request for id={}", authTrainer.getId());
+        traineeService.changePassword(authTrainer.getUsername(), newPassword);
     }
 
-
     public Trainer getTrainer(String username, String password) {
-        Trainee authTrainee = loginTrainee(username, password);
+        Trainer authTrainer = loginTrainer(username, password);
         log.debug("Facade: getTrainer id={}", username);
-        return trainerService.getByUsername(authTrainee.getUsername());
+        return trainerService.getByUsername(authTrainer.getUsername());
     }
 
     public List<Trainer> getAllTrainers(String username, String password) {
-        loginTrainee(username, password);
+        loginTrainer(username, password);
         log.debug("Facade: getAllTrainers request");
         return trainerService.getAll();
     }

@@ -72,6 +72,38 @@ public class TraineeService {
         log.info("Password changed successfully for username={}", username);
     }
 
+    public void activate(String username) {
+        log.info("Activating trainee username={}", username);
+
+        Trainee trainee = repository.findByUsername(username)
+                .orElseThrow(() -> new TraineeNotFoundException(username));
+
+        if (trainee.getActive()) {
+            throw new IllegalStateException("Trainee already active");
+        }
+
+        trainee.setActive(true);
+        repository.save(trainee);
+
+        log.info("Trainee activated username={}", username);
+    }
+
+    public void deactivate(String username) {
+        log.info("Deactivating trainee username={}", username);
+
+        Trainee trainee = repository.findByUsername(username)
+                .orElseThrow(() -> new TraineeNotFoundException(username));
+
+        if (!trainee.getActive()) {
+            throw new IllegalStateException("Trainee already inactive");
+        }
+
+        trainee.setActive(false);
+        repository.save(trainee);
+
+        log.info("Trainee deactivated username={}", username);
+    }
+
     public Trainee getByUsername(String username) {
         log.debug("Fetching trainee by username={}", username);
 
