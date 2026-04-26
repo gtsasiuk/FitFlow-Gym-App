@@ -1,6 +1,5 @@
 package com.training.fitflow.service;
 
-
 import com.training.fitflow.exception.TraineeNotFoundException;
 import com.training.fitflow.model.Trainee;
 import com.training.fitflow.repository.TraineeRepository;
@@ -42,7 +41,11 @@ public class TraineeService {
     public Trainee update(Trainee trainee) {
         log.info("Updating trainee with id={}", trainee.getId());
 
-        Trainee existingTrainee = getByUsername(trainee.getUsername());
+        Trainee existingTrainee = repository.findById(trainee.getId())
+                .orElseThrow(() -> {
+                    log.warn("Trainee not found id={}", trainee.getId());
+                    return new TraineeNotFoundException(trainee.getUsername());
+                });
 
         UserUpdateUtil.updateNameFields(existingTrainee, trainee.getFirstName(), trainee.getLastName(), usernameGenerator);
 

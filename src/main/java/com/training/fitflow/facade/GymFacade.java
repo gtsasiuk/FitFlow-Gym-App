@@ -3,6 +3,7 @@ package com.training.fitflow.facade;
 import com.training.fitflow.model.Trainee;
 import com.training.fitflow.model.Trainer;
 import com.training.fitflow.model.Training;
+import com.training.fitflow.service.AuthService;
 import com.training.fitflow.service.TraineeService;
 import com.training.fitflow.service.TrainerService;
 import com.training.fitflow.service.TrainingService;
@@ -14,14 +15,25 @@ import java.util.List;
 @Component
 @Slf4j
 public class GymFacade {
+    private final AuthService authService;
     private final TraineeService traineeService;
     private final TrainerService trainerService;
     private final TrainingService trainingService;
 
-    public GymFacade(TraineeService traineeService, TrainerService trainerService, TrainingService trainingService) {
+    public GymFacade(AuthService authService, TraineeService traineeService,
+                     TrainerService trainerService, TrainingService trainingService) {
+        this.authService = authService;
         this.traineeService = traineeService;
         this.trainerService = trainerService;
         this.trainingService = trainingService;
+    }
+
+    private Trainee loginTrainee(String username, String password) {
+        return authService.authenticateTrainee(username, password);
+    }
+
+    private Trainer loginTrainer(String username, String password) {
+        return authService.authenticateTrainer(username, password);
     }
 
     public Trainee createTrainee(Trainee trainee) {
@@ -34,19 +46,34 @@ public class GymFacade {
         return result;
     }
 
-    public Trainee getTrainee(String username) {
-        log.debug("Facade: getTrainee username={}", username);
-        return traineeService.getByUsername(username);
+    public Trainee updateTrainee(String username, String password, Trainee updatedData) {
+        loginTrainee(username, password);
+
+        log.info("Facade: updateTrainee request for id={}", updatedData.getId());
+
+        Trainee result = traineeService.update(updatedData);
+
+        log.info("Facade: trainee updated id={}", result.getId());
+
+        return result;
     }
 
-    public List<Trainee> getAllTrainees() {
+    public Trainee getTrainee(String username, String password) {
+        Trainee authTrainee = loginTrainee(username, password);
+        log.debug("Facade: getTrainee username={}", username);
+        return traineeService.getByUsername(authTrainee.getUsername());
+    }
+
+    public List<Trainee> getAllTrainees(String username, String password) {
+        loginTrainee(username, password);
         log.debug("Facade: getAllTrainees request");
         return traineeService.getAll();
     }
 
-    public void deleteTrainee(String username) {
+    public void deleteTrainee(String username, String password) {
+        Trainee authTrainee = loginTrainee(username, password);
         log.info("Facade: deleteTrainee id={}", username);
-        traineeService.deleteByUsername(username);
+        traineeService.deleteByUsername(authTrainee.getUsername());
     }
 
     public Trainer createTrainer(Trainer trainer) {
