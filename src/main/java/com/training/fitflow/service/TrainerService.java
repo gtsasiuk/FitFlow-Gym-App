@@ -77,7 +77,7 @@ public class TrainerService {
         log.info("Activating trainer username={}", username);
 
         Trainer trainer = repository.findByUsername(username)
-                .orElseThrow(() -> new TraineeNotFoundException(username));
+                .orElseThrow(() -> new TrainerNotFoundException(username));
 
         if (trainer.getActive()) {
             throw new IllegalStateException("Trainer already active");
@@ -93,10 +93,10 @@ public class TrainerService {
         log.info("Deactivating trainer username={}", username);
 
         Trainer trainer = repository.findByUsername(username)
-                .orElseThrow(() -> new TraineeNotFoundException(username));
+                .orElseThrow(() -> new TrainerNotFoundException(username));
 
         if (!trainer.getActive()) {
-            throw new IllegalStateException("Trainee already inactive");
+            throw new IllegalStateException("Trainer already inactive");
         }
 
         trainer.setActive(false);

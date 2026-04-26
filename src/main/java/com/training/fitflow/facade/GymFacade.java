@@ -115,19 +115,19 @@ public class GymFacade {
     public void changeTrainerPassword(String username, String oldPassword, String newPassword) {
         Trainer authTrainer = authService.authenticateTrainer(username, oldPassword);
         log.info("Facade: change trainer password request for id={}", authTrainer.getId());
-        traineeService.changePassword(authTrainer.getUsername(), newPassword);
+        trainerService.changePassword(authTrainer.getUsername(), newPassword);
     }
 
     public void activateTrainer(String username, String password) {
         Trainer authTrainer = loginTrainer(username, password);
         log.info("Facade: activate user request for id={}", authTrainer.getId());
-        traineeService.activate(authTrainer.getUsername());
+        trainerService.activate(authTrainer.getUsername());
     }
 
     public void deactivateTrainer(String username, String password) {
         Trainer authTrainer = loginTrainer(username, password);
         log.info("Facade: deactivate user request for id={}", authTrainer.getId());
-        traineeService.deactivate(authTrainer.getUsername());
+        trainerService.deactivate(authTrainer.getUsername());
     }
 
     public Trainer getTrainer(String username, String password) {
@@ -146,7 +146,7 @@ public class GymFacade {
         log.info("Facade: createTraining request name={}, trainerId={}, traineeId={}",
                 training.getName(),
                 training.getTrainer(),
-                training.getTrainer()
+                training.getTrainee()
         );
 
         Training result = trainingService.create(training);
