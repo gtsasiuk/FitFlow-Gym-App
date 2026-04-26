@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -47,6 +48,37 @@ public class TrainingService {
         log.info("Training created successfully with id={}", saved.getId());
 
         return saved;
+    }
+
+    public List<Training> getTraineeTrainings(
+            String username,
+            LocalDate fromDate,
+            LocalDate toDate,
+            String trainerName,
+            Long typeId
+    ) {
+        log.info("Getting trainee trainings username={}", username);
+
+        traineeRepository.findByUsername(username)
+                .orElseThrow(() -> new TraineeNotFoundException(username));
+
+        return trainingRepository.findTraineeTrainings(
+                username, fromDate, toDate, trainerName, typeId);
+    }
+
+    public List<Training> getTrainerTrainings(
+            String username,
+            LocalDate fromDate,
+            LocalDate toDate,
+            String traineeName
+    ) {
+        log.info("Getting trainer trainings username={}", username);
+
+        trainerRepository.findByUsername(username)
+                .orElseThrow(() -> new TrainerNotFoundException(username));
+
+        return trainingRepository.findTrainerTrainings(
+                username, fromDate, toDate, traineeName);
     }
 
     public Training getById(Long id) {

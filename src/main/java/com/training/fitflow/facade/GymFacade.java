@@ -10,6 +10,7 @@ import com.training.fitflow.service.TrainingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Component
@@ -154,6 +155,31 @@ public class GymFacade {
         log.info("Facade: training created id={}", result.getId());
 
         return result;
+    }
+
+    public List<Training> getTraineeTrainings(
+            String username,
+            String password,
+            LocalDate from,
+            LocalDate to,
+            String trainerName,
+            Long typeId) {
+        loginTrainee(username, password);
+        log.debug("Facade: getTraineeTrainings for trainee={}, filters applied", username);
+        return trainingService.getTraineeTrainings(
+                username, from, to, trainerName, typeId);
+    }
+
+    public List<Training> getTrainerTrainings(
+            String username,
+            String password,
+            LocalDate from,
+            LocalDate to,
+            String traineeName) {
+        loginTrainer(username, password);
+        log.debug("Facade: getTrainerTrainings for trainer={}, filters applied", username);
+        return trainingService.getTrainerTrainings(
+                username, from, to, traineeName);
     }
 
     public Training getTraining(Long id) {
