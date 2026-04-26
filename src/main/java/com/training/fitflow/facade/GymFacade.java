@@ -63,14 +63,14 @@ public class GymFacade {
     }
 
     public void activateTrainee(String username, String password) {
-        Trainee authUser = loginTrainee(username, password);
-        log.info("Facade: activate user request for id={}", authUser.getId());
-        traineeService.activate(authUser.getUsername());
+        Trainee authTrainee = loginTrainee(username, password);
+        log.info("Facade: activate trainee request for id={}", authTrainee.getId());
+        traineeService.activate(authTrainee.getUsername());
     }
 
     public void deactivateTrainee(String username, String password) {
         Trainee authTrainee = loginTrainee(username, password);
-        log.info("Facade: deactivate user request for id={}", authTrainee.getId());
+        log.info("Facade: deactivate trainee request for id={}", authTrainee.getId());
         traineeService.deactivate(authTrainee.getUsername());
     }
 
@@ -116,6 +116,18 @@ public class GymFacade {
         Trainer authTrainer = authService.authenticateTrainer(username, oldPassword);
         log.info("Facade: change trainer password request for id={}", authTrainer.getId());
         traineeService.changePassword(authTrainer.getUsername(), newPassword);
+    }
+
+    public void activateTrainer(String username, String password) {
+        Trainer authTrainer = loginTrainer(username, password);
+        log.info("Facade: activate user request for id={}", authTrainer.getId());
+        traineeService.activate(authTrainer.getUsername());
+    }
+
+    public void deactivateTrainer(String username, String password) {
+        Trainer authTrainer = loginTrainer(username, password);
+        log.info("Facade: deactivate user request for id={}", authTrainer.getId());
+        traineeService.deactivate(authTrainer.getUsername());
     }
 
     public Trainer getTrainer(String username, String password) {
