@@ -100,6 +100,13 @@ public class GymFacade {
         return result;
     }
 
+    public void changeTrainerPassword(String username, String oldPassword, String newPassword) {
+        Trainee authUser = authService.authenticateTrainee(username, oldPassword);
+        log.info("Facade: change trainer password request for id={}", authUser.getId());
+        traineeService.changePassword(authUser.getUsername(), newPassword);
+    }
+
+
     public Trainer getTrainer(String username, String password) {
         Trainee authTrainee = loginTrainee(username, password);
         log.debug("Facade: getTrainer id={}", username);

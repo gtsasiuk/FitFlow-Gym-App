@@ -1,6 +1,8 @@
 package com.training.fitflow.service;
 
+import com.training.fitflow.exception.TraineeNotFoundException;
 import com.training.fitflow.exception.TrainerNotFoundException;
+import com.training.fitflow.model.Trainee;
 import com.training.fitflow.model.Trainer;
 import com.training.fitflow.repository.TrainerRepository;
 import com.training.fitflow.util.PasswordGenerator;
@@ -42,7 +44,12 @@ public class TrainerService {
     public Trainer update(Trainer trainer) {
         log.info("Updating trainer id={}", trainer.getId());
 
-        Trainer existingTrainer = getByUsername(trainer.getUsername());
+        Trainer existingTrainer = repository.findById(trainer.getId())
+                .orElseThrow(() -> {
+                    log.warn("Trainer not found id={}", trainer.getId());
+                    return new TrainerNotFoundException(trainer.getUsername());
+                });
+
         UserUpdateUtil.updateNameFields(existingTrainer, trainer.getFirstName(), trainer.getLastName(), usernameGenerator);
         existingTrainer.setSpecialization(trainer.getSpecialization());
 
@@ -51,6 +58,19 @@ public class TrainerService {
         log.info("Trainer updated successfully id={}", updated.getId());
 
         return updated;
+    }
+
+    public void changePassword(String username, String newPassword) {
+        log.info("Changing password for trainee username={}", username);
+
+        Trainer trainer = repository.findByUsername(username)
+                .orElseThrow(() -> new TrainerNotFoundException(username));
+
+        trainer.setPassword(newPassword);
+
+        repository.save(trainer);
+
+        log.info("Password changed successfully for username={}", username);
     }
 
     public Trainer getByUsername(String username) {
