@@ -1,13 +1,12 @@
 package com.training.fitflow.service;
 
-import com.training.fitflow.exception.TraineeNotFoundException;
 import com.training.fitflow.exception.TrainerNotFoundException;
-import com.training.fitflow.model.Trainee;
 import com.training.fitflow.model.Trainer;
 import com.training.fitflow.repository.TrainerRepository;
 import com.training.fitflow.util.PasswordGenerator;
 import com.training.fitflow.util.UsernameGenerator;
 import com.training.fitflow.util.UserUpdateUtil;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,6 +21,7 @@ public class TrainerService {
     private final UsernameGenerator usernameGenerator;
     private final PasswordGenerator passwordGenerator;
 
+    @Transactional
     public Trainer create(Trainer trainer) {
         log.info("Creating trainer: {} {}", trainer.getFirstName(), trainer.getLastName());
 
@@ -41,6 +41,7 @@ public class TrainerService {
         return saved;
     }
 
+    @Transactional
     public Trainer update(Trainer trainer) {
         log.info("Updating trainer id={}", trainer.getId());
 
@@ -60,6 +61,7 @@ public class TrainerService {
         return updated;
     }
 
+    @Transactional
     public void changePassword(String username, String newPassword) {
         log.info("Changing password for trainer username={}", username);
 
@@ -73,6 +75,7 @@ public class TrainerService {
         log.info("Password changed successfully for username={}", username);
     }
 
+    @Transactional
     public void activate(String username) {
         log.info("Activating trainer username={}", username);
 
@@ -89,6 +92,7 @@ public class TrainerService {
         log.info("Trainer activated username={}", username);
     }
 
+    @Transactional
     public void deactivate(String username) {
         log.info("Deactivating trainer username={}", username);
 

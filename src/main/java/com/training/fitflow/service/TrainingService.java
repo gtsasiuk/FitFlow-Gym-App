@@ -7,6 +7,7 @@ import com.training.fitflow.model.Training;
 import com.training.fitflow.repository.TraineeRepository;
 import com.training.fitflow.repository.TrainerRepository;
 import com.training.fitflow.repository.TrainingRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ public class TrainingService {
     private final TrainerRepository trainerRepository;
     private final TrainingRepository trainingRepository;
 
+    @Transactional
     public Training create(Training training) {
         log.info("Creating training: name={}, trainerId={}, traineeId={}",
                 training.getName(),

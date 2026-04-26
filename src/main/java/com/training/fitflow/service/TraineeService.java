@@ -6,6 +6,7 @@ import com.training.fitflow.repository.TraineeRepository;
 import com.training.fitflow.util.PasswordGenerator;
 import com.training.fitflow.util.UsernameGenerator;
 import com.training.fitflow.util.UserUpdateUtil;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ public class TraineeService {
     private final UsernameGenerator usernameGenerator;
     private final PasswordGenerator passwordGenerator;
 
+    @Transactional
     public Trainee create(Trainee trainee) {
         log.info("Creating trainee: {} {}", trainee.getFirstName(), trainee.getLastName());
 
@@ -38,6 +40,7 @@ public class TraineeService {
         return saved;
     }
 
+    @Transactional
     public Trainee update(Trainee trainee) {
         log.info("Updating trainee with id={}", trainee.getId());
 
@@ -59,6 +62,7 @@ public class TraineeService {
         return updated;
     }
 
+    @Transactional
     public void changePassword(String username, String newPassword) {
         log.info("Changing password for trainee username={}", username);
 
@@ -72,6 +76,7 @@ public class TraineeService {
         log.info("Password changed successfully for username={}", username);
     }
 
+    @Transactional
     public void activate(String username) {
         log.info("Activating trainee username={}", username);
 
@@ -88,6 +93,7 @@ public class TraineeService {
         log.info("Trainee activated username={}", username);
     }
 
+    @Transactional
     public void deactivate(String username) {
         log.info("Deactivating trainee username={}", username);
 
@@ -119,6 +125,7 @@ public class TraineeService {
         return repository.findAll();
     }
 
+    @Transactional
     public void deleteByUsername(String username) {
         log.info("Deleting trainee username={}", username);
         repository.deleteByUsername(username);
