@@ -58,7 +58,7 @@ public class GymFacade {
 
     public void changeTraineePassword(String username, String oldPassword, String newPassword) {
         Trainee authUser = authService.authenticateTrainee(username, oldPassword);
-        log.info("Facade: change password request for Trainee with id={}", authUser.getId());
+        log.info("Facade: change trainee password request for id={}", authUser.getId());
         traineeService.changePassword(authUser.getUsername(), newPassword);
     }
 
@@ -90,12 +90,24 @@ public class GymFacade {
         return result;
     }
 
-    public Trainer getTrainer(String username) {
-        log.debug("Facade: getTrainer id={}", username);
-        return trainerService.getByUsername(username);
+    public Trainer updateTrainer(String username, String password, Trainer updatedData) {
+        loginTrainer(username, password);
+
+        log.info("Facade: updateTrainer request for id={}", updatedData.getId());
+        Trainer result = trainerService.update(updatedData);
+        log.info("Facade: trainer updated id={}", result.getId());
+
+        return result;
     }
 
-    public List<Trainer> getAllTrainers() {
+    public Trainer getTrainer(String username, String password) {
+        Trainee authTrainee = loginTrainee(username, password);
+        log.debug("Facade: getTrainer id={}", username);
+        return trainerService.getByUsername(authTrainee.getUsername());
+    }
+
+    public List<Trainer> getAllTrainers(String username, String password) {
+        loginTrainee(username, password);
         log.debug("Facade: getAllTrainers request");
         return trainerService.getAll();
     }
