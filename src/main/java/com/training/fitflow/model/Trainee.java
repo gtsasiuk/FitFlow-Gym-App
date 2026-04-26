@@ -34,6 +34,9 @@ public class Trainee extends User {
     )
     private Set<Trainer> trainers;
 
+    @OneToMany(mappedBy = "trainee", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Training> trainings;
+
     @Override
     public String toString() {
         return "Trainee{" +
