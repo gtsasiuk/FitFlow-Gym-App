@@ -61,7 +61,7 @@ public class TrainerService {
     }
 
     public void changePassword(String username, String newPassword) {
-        log.info("Changing password for trainee username={}", username);
+        log.info("Changing password for trainer username={}", username);
 
         Trainer trainer = repository.findByUsername(username)
                 .orElseThrow(() -> new TrainerNotFoundException(username));
