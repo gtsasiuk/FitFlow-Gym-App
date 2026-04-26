@@ -59,6 +59,19 @@ public class TraineeService {
         return updated;
     }
 
+    public void changePassword(String username, String newPassword) {
+        log.info("Changing password for trainee username={}", username);
+
+        Trainee trainee = repository.findByUsername(username)
+                .orElseThrow(() -> new TraineeNotFoundException(username));
+
+        trainee.setPassword(newPassword);
+
+        repository.save(trainee);
+
+        log.info("Password changed successfully for username={}", username);
+    }
+
     public Trainee getByUsername(String username) {
         log.debug("Fetching trainee by username={}", username);
 

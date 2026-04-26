@@ -50,12 +50,16 @@ public class GymFacade {
         loginTrainee(username, password);
 
         log.info("Facade: updateTrainee request for id={}", updatedData.getId());
-
         Trainee result = traineeService.update(updatedData);
-
         log.info("Facade: trainee updated id={}", result.getId());
 
         return result;
+    }
+
+    public void changeTraineePassword(String username, String oldPassword, String newPassword) {
+        Trainee authUser = authService.authenticateTrainee(username, oldPassword);
+        log.info("Facade: change password request for Trainee with id={}", authUser.getId());
+        traineeService.changePassword(authUser.getUsername(), newPassword);
     }
 
     public Trainee getTrainee(String username, String password) {
