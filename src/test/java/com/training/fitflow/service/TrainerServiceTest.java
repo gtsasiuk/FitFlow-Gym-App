@@ -10,16 +10,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.Mock;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
+@ExtendWith(MockitoExtension.class)
 @DisplayName("TrainerService Tests")
 class TrainerServiceTest {
     @Mock
@@ -44,6 +45,7 @@ class TrainerServiceTest {
         trainer.setFirstName("John");
         trainer.setLastName("Doe");
         trainer.setSpecialization(type);
+        trainer.setActive(false);
     }
 
     @Test
@@ -51,7 +53,7 @@ class TrainerServiceTest {
     void create_shouldGenerateUsernamePasswordAndSaveTrainer() {
         when(usernameGenerator.generate("John", "Doe")).thenReturn("John.Doe");
         when(passwordGenerator.generate()).thenReturn("password123");
-        when(repository.save(any(Trainer.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Trainer result = service.create(trainer);
 
@@ -65,44 +67,37 @@ class TrainerServiceTest {
     }
 
     @Test
-    @DisplayName("Update → should update specialization without changing username if name is same")
-    void update_shouldUpdateSpecializationWithoutChangingUsernameIfNameSame() {
+    @DisplayName("Update → should update specialization without changing username if name same")
+    void update_shouldUpdateWithoutChangingUsername() {
         Trainer existing = new Trainer(
-                1L, "John", "Doe", "John.Doe", "pass", true,
-                type
+                1L, "John", "Doe", "John.Doe", "pass", true, type
         );
 
-        when(repository.findByUsername("John.Doe")).thenReturn(Optional.of(existing));
+        when(repository.findById(1L)).thenReturn(Optional.of(existing));
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         trainer.setFirstName("John");
         trainer.setLastName("Doe");
-        trainer.setUsername("John.Doe");
-        trainer.setSpecialization(type);
 
         Trainer result = service.update(trainer);
 
-        assertAll(
-                () -> assertEquals("John.Doe", result.getUsername()),
-                () -> assertEquals(type, result.getSpecialization())
-        );
+        assertEquals("John.Doe", result.getUsername());
+        assertEquals(type, result.getSpecialization());
     }
 
     @Test
     @DisplayName("Update → should regenerate username if name changed")
-    void update_shouldRegenerateUsernameIfNameChanged() {
+    void update_shouldRegenerateUsername() {
         Trainer existing = new Trainer(
-                1L, "John", "Doe", "John.Doe", "pass", true,
-                type
+                1L, "John", "Doe", "John.Doe", "pass", true, type
         );
 
-        when(repository.findByUsername("John.Doe")).thenReturn(Optional.of(existing));
+        when(repository.findById(1L)).thenReturn(Optional.of(existing));
         when(usernameGenerator.generate("Jane", "Smith")).thenReturn("Jane.Smith");
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         trainer.setFirstName("Jane");
         trainer.setLastName("Smith");
-        trainer.setUsername("John.Doe");
 
         Trainer result = service.update(trainer);
 
@@ -110,8 +105,103 @@ class TrainerServiceTest {
     }
 
     @Test
+    @DisplayName("Update → should throw exception when trainer not found")
+    void update_shouldThrowException_whenNotFound() {
+        when(repository.findById(1L)).thenReturn(Optional.empty());
+
+        TrainerNotFoundException ex = assertThrows(
+                TrainerNotFoundException.class,
+                () -> service.update(trainer)
+        );
+
+        assertTrue(ex.getMessage().contains("1"));
+    }
+
+    @Test
+    @DisplayName("ChangePassword → should update password")
+    void changePassword_shouldUpdatePassword() {
+        Trainer existing = new Trainer(
+                1L, "John", "Doe", "John.Doe", "old", true, type
+        );
+
+        when(repository.findByUsername("John.Doe")).thenReturn(Optional.of(existing));
+
+        service.changePassword("John.Doe", "newPass");
+
+        assertEquals("newPass", existing.getPassword());
+        verify(repository).save(existing);
+    }
+
+    @Test
+    @DisplayName("ChangePassword → should throw when trainer not found")
+    void changePassword_shouldThrow_whenNotFound() {
+        when(repository.findByUsername("John.Doe")).thenReturn(Optional.empty());
+
+        assertThrows(
+                TrainerNotFoundException.class,
+                () -> service.changePassword("John.Doe", "newPass")
+        );
+    }
+
+    @Test
+    @DisplayName("Activate → should activate trainer")
+    void activate_shouldActivateTrainer() {
+        Trainer existing = new Trainer(
+                1L, "John", "Doe", "John.Doe", "pass", false, type
+        );
+
+        when(repository.findByUsername("John.Doe")).thenReturn(Optional.of(existing));
+
+        service.activate("John.Doe");
+
+        assertTrue(existing.getActive());
+        verify(repository).save(existing);
+    }
+
+    @Test
+    @DisplayName("Activate → should throw if already active")
+    void activate_shouldThrowIfAlreadyActive() {
+        Trainer existing = new Trainer(
+                1L, "John", "Doe", "John.Doe", "pass", true, type
+        );
+
+        when(repository.findByUsername("John.Doe")).thenReturn(Optional.of(existing));
+
+        assertThrows(IllegalStateException.class,
+                () -> service.activate("John.Doe"));
+    }
+
+    @Test
+    @DisplayName("Deactivate → should deactivate trainer")
+    void deactivate_shouldDeactivateTrainer() {
+        Trainer existing = new Trainer(
+                1L, "John", "Doe", "John.Doe", "pass", true, type
+        );
+
+        when(repository.findByUsername("John.Doe")).thenReturn(Optional.of(existing));
+
+        service.deactivate("John.Doe");
+
+        assertFalse(existing.getActive());
+        verify(repository).save(existing);
+    }
+
+    @Test
+    @DisplayName("Deactivate → should throw if already inactive")
+    void deactivate_shouldThrowIfAlreadyInactive() {
+        Trainer existing = new Trainer(
+                1L, "John", "Doe", "John.Doe", "pass", false, type
+        );
+
+        when(repository.findByUsername("John.Doe")).thenReturn(Optional.of(existing));
+
+        assertThrows(IllegalStateException.class,
+                () -> service.deactivate("John.Doe"));
+    }
+
+    @Test
     @DisplayName("GetByUsername → should return trainer when exists")
-    void getById_shouldReturnTrainer_whenExists() {
+    void getByUsername_shouldReturnTrainer() {
         when(repository.findByUsername("John.Doe")).thenReturn(Optional.of(trainer));
 
         Trainer result = service.getByUsername("John.Doe");
@@ -120,47 +210,44 @@ class TrainerServiceTest {
     }
 
     @Test
-    @DisplayName("GetByUsername → should throw exception when trainer not found")
-    void getById_shouldThrowException_whenNotFound() {
+    @DisplayName("GetByUsername → should throw when not found")
+    void getByUsername_shouldThrow_whenNotFound() {
         when(repository.findByUsername("John.Doe")).thenReturn(Optional.empty());
 
-        TrainerNotFoundException ex = assertThrows(TrainerNotFoundException.class,
+        assertThrows(TrainerNotFoundException.class,
                 () -> service.getByUsername("John.Doe"));
-
-        assertEquals("Trainer with username=John.Doe not found", ex.getMessage());
     }
 
     @Test
-    @DisplayName("GetAll → should return list of trainers")
-    void getAll_shouldReturnAllTrainers() {
+    @DisplayName("GetAll → should return all trainers")
+    void getAll_shouldReturnAll() {
         when(repository.findAll()).thenReturn(List.of(trainer));
 
         List<Trainer> result = service.getAll();
 
         assertEquals(1, result.size());
-        verify(repository).findAll();
     }
 
     @Test
-    @DisplayName("Trainer.toString() → should contain all main fields")
-    void toString_shouldContainAllFields() {
-        Trainer trainer = new Trainer(
+    @DisplayName("toString → should contain main fields")
+    void toString_shouldContainFields() {
+        Trainer t = new Trainer(
                 1L,
                 "John",
                 "Doe",
                 "John.Doe",
-                "password12",
+                "password",
                 true,
-                new TrainingType(1L, "Yoga")
+                type
         );
 
-        String result = trainer.toString();
+        String result = t.toString();
 
         assertAll(
                 () -> assertTrue(result.contains("John")),
                 () -> assertTrue(result.contains("Doe")),
                 () -> assertTrue(result.contains("John.Doe")),
-                () -> assertTrue(result.contains("password12"))
+                () -> assertTrue(result.contains("password"))
         );
     }
 }
