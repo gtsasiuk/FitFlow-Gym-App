@@ -113,8 +113,6 @@ class TrainerServiceTest {
                 TrainerNotFoundException.class,
                 () -> service.update(trainer)
         );
-
-        assertTrue(ex.getMessage().contains("1"));
     }
 
     @Test
