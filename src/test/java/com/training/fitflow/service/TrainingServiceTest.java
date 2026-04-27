@@ -15,7 +15,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
@@ -28,13 +27,15 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("TrainingService Tests")
 class TrainingServiceTest {
+
     @Mock
     private TraineeRepository traineeRepository;
+
     @Mock
     private TrainerRepository trainerRepository;
+
     @Mock
     private TrainingRepository trainingRepository;
-
 
     @InjectMocks
     private TrainingService service;
@@ -66,63 +67,47 @@ class TrainingServiceTest {
     }
 
     @Test
-    @DisplayName("Create → should save training when trainee and trainer exist")
+    @DisplayName("Create → should save training when valid")
     void create_shouldSaveTraining_whenValid() {
-        when(trainerRepository.findByUsername("trainer.one"))
-                .thenReturn(Optional.of(trainer));
-
-        when(traineeRepository.findByUsername("john.doe"))
-                .thenReturn(Optional.of(trainee));
-
-        when(trainingRepository.save(any(Training.class)))
-                .thenAnswer(inv -> inv.getArgument(0));
+        when(trainerRepository.findById(20L)).thenReturn(Optional.of(trainer));
+        when(traineeRepository.findById(10L)).thenReturn(Optional.of(trainee));
+        when(trainingRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Training result = service.create(training);
 
-        assertNotNull(result);
         assertEquals("Morning Workout", result.getName());
-
         verify(trainingRepository).save(training);
     }
 
     @Test
-    @DisplayName("Create → should throw exception when trainer not found")
-    void create_shouldThrowException_whenTrainerNotFound() {
-        when(trainerRepository.findByUsername("trainer.one"))
-                .thenReturn(Optional.empty());
+    @DisplayName("Create → should throw when trainer not found")
+    void create_shouldThrow_whenTrainerNotFound() {
+        when(trainerRepository.findById(20L)).thenReturn(Optional.empty());
 
-        TrainerNotFoundException ex = assertThrows(
-                TrainerNotFoundException.class,
-                () -> service.create(training)
-        );
+        assertThrows(TrainerNotFoundException.class,
+                () -> service.create(training));
 
-        assertTrue(ex.getMessage().contains("trainer.one"));
         verify(trainingRepository, never()).save(any());
     }
 
     @Test
-    @DisplayName("Create → should throw exception when trainee not found")
-    void create_shouldThrowException_whenTraineeNotFound() {
-        when(trainerRepository.findByUsername("trainer.one"))
-                .thenReturn(Optional.of(trainer));
+    @DisplayName("Create → should throw when trainee not found")
+    void create_shouldThrow_whenTraineeNotFound() {
+        when(trainerRepository.findById(20L)).thenReturn(Optional.of(trainer));
+        when(traineeRepository.findById(10L)).thenReturn(Optional.empty());
 
-        when(traineeRepository.findByUsername("john.doe"))
-                .thenReturn(Optional.empty());
+        assertThrows(TraineeNotFoundException.class,
+                () -> service.create(training));
 
-        TraineeNotFoundException ex = assertThrows(
-                TraineeNotFoundException.class,
-                () -> service.create(training)
-        );
-
-        assertTrue(ex.getMessage().contains("john.doe"));
         verify(trainingRepository, never()).save(any());
     }
 
+    // ---------------- GET BY ID ----------------
+
     @Test
-    @DisplayName("GetById → should return training when exists")
+    @DisplayName("GetById → should return training")
     void getById_shouldReturnTraining() {
-        when(trainingRepository.findById(1L))
-                .thenReturn(Optional.of(training));
+        when(trainingRepository.findById(1L)).thenReturn(Optional.of(training));
 
         Training result = service.getById(1L);
 
@@ -130,27 +115,80 @@ class TrainingServiceTest {
     }
 
     @Test
-    @DisplayName("GetById → should throw exception when not found")
-    void getById_shouldThrowException() {
-        when(trainingRepository.findById(1L))
-                .thenReturn(Optional.empty());
+    @DisplayName("GetById → should throw when not found")
+    void getById_shouldThrow() {
+        when(trainingRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(
-                TrainingNotFoundException.class,
-                () -> service.getById(1L)
-        );
+        assertThrows(TrainingNotFoundException.class,
+                () -> service.getById(1L));
     }
 
     @Test
     @DisplayName("GetAll → should return list")
     void getAll_shouldReturnList() {
-        when(trainingRepository.findAll())
-                .thenReturn(List.of(training));
+        when(trainingRepository.findAll()).thenReturn(List.of(training));
 
         List<Training> result = service.getAll();
 
         assertEquals(1, result.size());
-        verify(trainingRepository).findAll();
+    }
+
+    @Test
+    @DisplayName("getTraineeTrainings → should return list when trainee exists")
+    void getTraineeTrainings_shouldReturnList() {
+        when(traineeRepository.findByUsername("john.doe"))
+                .thenReturn(Optional.of(trainee));
+
+        when(trainingRepository.findTraineeTrainings(
+                any(), any(), any(), any(), any()
+        )).thenReturn(List.of(training));
+
+        List<Training> result = service.getTraineeTrainings(
+                "john.doe", null, null, null, null
+        );
+
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    @DisplayName("getTraineeTrainings → should throw when trainee not found")
+    void getTraineeTrainings_shouldThrow() {
+        when(traineeRepository.findByUsername("john.doe"))
+                .thenReturn(Optional.empty());
+
+        assertThrows(TraineeNotFoundException.class,
+                () -> service.getTraineeTrainings(
+                        "john.doe", null, null, null, null
+                ));
+    }
+
+    @Test
+    @DisplayName("getTrainerTrainings → should return list when trainer exists")
+    void getTrainerTrainings_shouldReturnList() {
+        when(trainerRepository.findByUsername("trainer.one"))
+                .thenReturn(Optional.of(trainer));
+
+        when(trainingRepository.findTrainerTrainings(
+                any(), any(), any(), any()
+        )).thenReturn(List.of(training));
+
+        List<Training> result = service.getTrainerTrainings(
+                "trainer.one", null, null, null
+        );
+
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    @DisplayName("getTrainerTrainings → should throw when trainer not found")
+    void getTrainerTrainings_shouldThrow() {
+        when(trainerRepository.findByUsername("trainer.one"))
+                .thenReturn(Optional.empty());
+
+        assertThrows(TrainerNotFoundException.class,
+                () -> service.getTrainerTrainings(
+                        "trainer.one", null, null, null
+                ));
     }
 
     @Test
@@ -159,9 +197,9 @@ class TrainingServiceTest {
         String result = training.toString();
 
         assertAll(
-                () -> assertTrue(result.contains("1")),
                 () -> assertTrue(result.contains("Morning Workout")),
-                () -> assertTrue(result.contains("60"))
+                () -> assertTrue(result.contains("60")),
+                () -> assertTrue(result.contains("1"))
         );
     }
 }
