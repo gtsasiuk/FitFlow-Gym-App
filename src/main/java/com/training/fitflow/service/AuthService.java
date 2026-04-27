@@ -8,6 +8,7 @@ import com.training.fitflow.model.Trainee;
 import com.training.fitflow.model.Trainer;
 import com.training.fitflow.repository.TraineeRepository;
 import com.training.fitflow.repository.TrainerRepository;
+import com.training.fitflow.util.ValidationUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,14 @@ public class AuthService {
     private final TraineeRepository traineeRepository;
     private final TrainerRepository trainerRepository;
 
+    private void validateCredentials(String username, String password) {
+        ValidationUtil.notBlank(username, "Username");
+        ValidationUtil.notBlank(password, "Password");
+    }
+
     public Trainee authenticateTrainee(String username, String password) {
+        validateCredentials(username, password);
+
         log.info("Authenticating trainee with username={}", username);
         Trainee trainee = traineeRepository.findByUsername(username)
                 .orElseThrow(() -> new TraineeNotFoundException(username));
@@ -37,6 +45,8 @@ public class AuthService {
     }
 
     public Trainer authenticateTrainer(String username, String password) {
+        validateCredentials(username, password);
+
         log.info("Authenticating trainer with username={}", username);
         Trainer trainer = trainerRepository.findByUsername(username)
                 .orElseThrow(() -> new TrainerNotFoundException(username));

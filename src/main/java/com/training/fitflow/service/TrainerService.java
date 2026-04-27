@@ -6,6 +6,7 @@ import com.training.fitflow.repository.TrainerRepository;
 import com.training.fitflow.util.PasswordGenerator;
 import com.training.fitflow.util.UsernameGenerator;
 import com.training.fitflow.util.UserUpdateUtil;
+import com.training.fitflow.util.ValidationUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,9 +22,34 @@ public class TrainerService {
     private final UsernameGenerator usernameGenerator;
     private final PasswordGenerator passwordGenerator;
 
+    private void validateTrainerForCreate(Trainer trainer) {
+        ValidationUtil.notNull(trainer, "Trainer");
+
+        ValidationUtil.notBlank(trainer.getFirstName(), "First name");
+        ValidationUtil.notBlank(trainer.getLastName(), "Last name");
+
+        ValidationUtil.notNull(trainer.getSpecialization(), "Specialization");
+    }
+
+    private void validateTrainerForUpdate(Trainer trainer) {
+        ValidationUtil.notNull(trainer.getId(), "Trainer ID");
+
+        ValidationUtil.notBlank(trainer.getFirstName(), "First name");
+        ValidationUtil.notBlank(trainer.getLastName(), "Last name");
+
+        ValidationUtil.notNull(trainer.getSpecialization(), "Specialization");
+    }
+
+    private void validateTrainerForNewPassword(String username, String newPassword) {
+        ValidationUtil.notBlank(username, "Username");
+        ValidationUtil.notBlank(newPassword, "New password");
+    }
+
     @Transactional
     public Trainer create(Trainer trainer) {
         log.info("Creating trainer: {} {}", trainer.getFirstName(), trainer.getLastName());
+
+        validateTrainerForCreate(trainer);
 
         String username = usernameGenerator.generate(trainer.getFirstName(), trainer.getLastName());
         String password = passwordGenerator.generate();
@@ -33,6 +59,7 @@ public class TrainerService {
         trainer.setUsername(username);
         trainer.setPassword(password);
         trainer.setActive(true);
+        trainer.setSpecialization(trainer.getSpecialization());
 
         Trainer saved = repository.save(trainer);
 
@@ -44,6 +71,8 @@ public class TrainerService {
     @Transactional
     public Trainer update(Trainer trainer) {
         log.info("Updating trainer id={}", trainer.getId());
+
+        validateTrainerForUpdate(trainer);
 
         Trainer existingTrainer = repository.findById(trainer.getId())
                 .orElseThrow(() -> {
@@ -63,6 +92,7 @@ public class TrainerService {
 
     @Transactional
     public void changePassword(String username, String newPassword) {
+        validateTrainerForNewPassword(username, newPassword);
         log.info("Changing password for trainer username={}", username);
 
         Trainer trainer = repository.findByUsername(username)
