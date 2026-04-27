@@ -109,7 +109,7 @@ class TrainerServiceTest {
     void update_shouldThrowException_whenNotFound() {
         when(repository.findById(1L)).thenReturn(Optional.empty());
 
-        TrainerNotFoundException ex = assertThrows(
+        assertThrows(
                 TrainerNotFoundException.class,
                 () -> service.update(trainer)
         );
