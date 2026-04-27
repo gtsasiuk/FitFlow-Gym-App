@@ -210,6 +210,8 @@ class TraineeServiceTest {
     @Test
     @DisplayName("GetUnassignedTrainers → should return list")
     void getUnassigned_shouldReturnList() {
+        Trainee trainee = new Trainee();
+        trainee.setUsername("John.Doe");
         when(traineeRepository.findByUsername("John.Doe")).thenReturn(Optional.of(trainee));
         when(trainerRepository.findNotAssignedToTrainee("John.Doe"))
                 .thenReturn(List.of(new Trainer()));
