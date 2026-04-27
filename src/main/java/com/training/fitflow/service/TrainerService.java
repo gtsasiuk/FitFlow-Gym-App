@@ -59,7 +59,6 @@ public class TrainerService {
         trainer.setUsername(username);
         trainer.setPassword(password);
         trainer.setActive(true);
-        trainer.setSpecialization(trainer.getSpecialization());
 
         Trainer saved = repository.save(trainer);
 
