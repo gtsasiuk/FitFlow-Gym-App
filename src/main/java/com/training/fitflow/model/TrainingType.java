@@ -1,19 +1,21 @@
 package com.training.fitflow.model;
 
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-public enum TrainingType {
-    FITNESS("Fitness"),
-    YOGA("Yoga"),
-    ZUMBA("Zumba"),
-    STRETCHING("Stretching"),
-    RESISTANCE("Resistance");
-
-    @Getter
-    private final String name;
-
-
-    TrainingType(String name) {
-        this.name = name;
-    }
+@Entity
+@Table(name = "training_types")
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+public class TrainingType {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @Column(name = "name", nullable = false, unique = true)
+    private String name;
 }
