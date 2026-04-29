@@ -1,9 +1,9 @@
 package com.training.fitflow.util;
 
-import com.training.fitflow.dao.TraineeDao;
-import com.training.fitflow.dao.TrainerDao;
 import com.training.fitflow.model.Trainee;
 import com.training.fitflow.model.Trainer;
+import com.training.fitflow.repository.TraineeRepository;
+import com.training.fitflow.repository.TrainerRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,9 +20,9 @@ import static org.mockito.Mockito.*;
 @DisplayName("UsernameGenerator Tests")
 class UsernameGeneratorTest {
     @Mock
-    private TraineeDao traineeDao;
+    private TraineeRepository traineeRepository;
     @Mock
-    private TrainerDao trainerDao;
+    private TrainerRepository trainerRepository;
 
     @InjectMocks
     private UsernameGenerator generator;
@@ -30,8 +30,8 @@ class UsernameGeneratorTest {
     @Test
     @DisplayName("Generate → should return base username when no duplicates")
     void generate_shouldReturnBase() {
-        when(traineeDao.findAllTrainees()).thenReturn(List.of());
-        when(trainerDao.findAllTrainers()).thenReturn(List.of());
+        when(traineeRepository.findAll()).thenReturn(List.of());
+        when(trainerRepository.findAll()).thenReturn(List.of());
 
         String result = generator.generate("John", "Doe");
 
@@ -47,8 +47,8 @@ class UsernameGeneratorTest {
         Trainee t2 = new Trainee();
         t2.setUsername("John.Doe1");
 
-        when(traineeDao.findAllTrainees()).thenReturn(List.of(t1, t2));
-        when(trainerDao.findAllTrainers()).thenReturn(List.of());
+        when(traineeRepository.findAll()).thenReturn(List.of(t1, t2));
+        when(trainerRepository.findAll()).thenReturn(List.of());
 
         String result = generator.generate("John", "Doe");
 
@@ -61,8 +61,8 @@ class UsernameGeneratorTest {
         Trainer trainer = new Trainer();
         trainer.setUsername("John.Doe");
 
-        when(traineeDao.findAllTrainees()).thenReturn(List.of());
-        when(trainerDao.findAllTrainers()).thenReturn(List.of(trainer));
+        when(traineeRepository.findAll()).thenReturn(List.of());
+        when(trainerRepository.findAll()).thenReturn(List.of(trainer));
 
         String result = generator.generate("John", "Doe");
 
@@ -75,8 +75,8 @@ class UsernameGeneratorTest {
         Trainee t1 = new Trainee();
         t1.setUsername(null);
 
-        when(traineeDao.findAllTrainees()).thenReturn(List.of(t1));
-        when(trainerDao.findAllTrainers()).thenReturn(List.of());
+        when(traineeRepository.findAll()).thenReturn(List.of(t1));
+        when(trainerRepository.findAll()).thenReturn(List.of());
 
         String result = generator.generate("John", "Doe");
 

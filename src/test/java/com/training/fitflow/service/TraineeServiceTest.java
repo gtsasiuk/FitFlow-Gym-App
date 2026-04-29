@@ -1,8 +1,10 @@
 package com.training.fitflow.service;
 
-import com.training.fitflow.dao.TraineeDao;
 import com.training.fitflow.exception.TraineeNotFoundException;
 import com.training.fitflow.model.Trainee;
+import com.training.fitflow.model.Trainer;
+import com.training.fitflow.repository.TraineeRepository;
+import com.training.fitflow.repository.TrainerRepository;
 import com.training.fitflow.util.PasswordGenerator;
 import com.training.fitflow.util.UsernameGenerator;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,8 +15,7 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -23,7 +24,9 @@ import static org.mockito.Mockito.*;
 @DisplayName("TraineeService Tests")
 class TraineeServiceTest {
     @Mock
-    private TraineeDao dao;
+    private TraineeRepository traineeRepository;
+    @Mock
+    private TrainerRepository trainerRepository;
     @Mock
     private UsernameGenerator usernameGenerator;
     @Mock
@@ -42,60 +45,66 @@ class TraineeServiceTest {
                 "Doe",
                 null,
                 null,
-                null,
+                true,
                 LocalDate.of(2000, 1, 1),
                 "Address"
         );
     }
 
     @Test
-    @DisplayName("Create → should generate username and password, then save trainee")
-    void create_shouldGenerateUsernamePasswordAndSaveTrainee() {
+    @DisplayName("Create → should generate username and password, then save")
+    void create_shouldGenerateAndSave() {
         when(usernameGenerator.generate("John", "Doe")).thenReturn("John.Doe");
-        when(passwordGenerator.generate()).thenReturn("password12");
-        when(dao.save(any(Trainee.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(passwordGenerator.generate()).thenReturn("pass123456");
+        when(traineeRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         Trainee result = service.create(trainee);
 
         assertEquals("John.Doe", result.getUsername());
-        assertEquals("password12", result.getPassword());
+        assertEquals("pass123456", result.getPassword());
         assertTrue(result.getActive());
 
-        verify(dao).save(trainee);
+        verify(traineeRepository).save(trainee);
     }
 
     @Test
-    @DisplayName("Update → should keep username unchanged when name remains the same")
-    void update_shouldUpdateFieldsWithoutChangingUsernameIfNameSame() {
+    @DisplayName("Create → should throw when firstName is blank")
+    void create_shouldThrow_whenFirstNameBlank() {
+        trainee.setFirstName("");
+
+        assertThrows(RuntimeException.class, () -> service.create(trainee));
+    }
+
+    @Test
+    @DisplayName("Update → should update without changing username")
+    void update_shouldKeepUsername() {
         Trainee existing = new Trainee(
                 1L, "John", "Doe", "John.Doe", "pass", true,
-                LocalDate.of(2000, 1, 1), "Old address"
+                LocalDate.now(), "Old"
         );
 
-        when(dao.findTraineeById(1L)).thenReturn(Optional.of(existing));
-        when(dao.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(traineeRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(traineeRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        trainee.setFirstName("John");
-        trainee.setLastName("Doe");
-        trainee.setAddress("New address");
+        trainee.setAddress("New");
 
         Trainee result = service.update(trainee);
 
         assertEquals("John.Doe", result.getUsername());
-        assertEquals("New address", result.getAddress());
+        assertEquals("New", result.getAddress());
     }
 
     @Test
-    @DisplayName("Update → should regenerate username when name changes")
-    void update_shouldRegenerateUsernameIfNameChanged() {
+    @DisplayName("Update → should regenerate username if name changed")
+    void update_shouldRegenerateUsername() {
         Trainee existing = new Trainee(
                 1L, "John", "Doe", "John.Doe", "pass", true,
-                LocalDate.of(2000, 1, 1), "Old address"
+                LocalDate.now(), "Old"
         );
 
-        when(dao.findTraineeById(1L)).thenReturn(Optional.of(existing));
+        when(traineeRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(usernameGenerator.generate("Jane", "Smith")).thenReturn("Jane.Smith");
-        when(dao.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(traineeRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         trainee.setFirstName("Jane");
         trainee.setLastName("Smith");
@@ -106,67 +115,143 @@ class TraineeServiceTest {
     }
 
     @Test
-    @DisplayName("GetById → should return trainee when it exists")
-    void getById_shouldReturnTrainee_whenExists() {
-        when(dao.findTraineeById(1L)).thenReturn(Optional.of(trainee));
+    @DisplayName("Update → should throw when trainee not found")
+    void update_shouldThrow_whenNotFound() {
+        when(traineeRepository.findById(1L)).thenReturn(Optional.empty());
 
-        Trainee result = service.getById(1L);
+        assertThrows(TraineeNotFoundException.class, () -> service.update(trainee));
+    }
 
-        assertEquals(trainee, result);
+
+    @Test
+    @DisplayName("ChangePassword → should update password")
+    void changePassword_shouldUpdate() {
+        when(traineeRepository.findByUsername("John.Doe")).thenReturn(Optional.of(trainee));
+
+        service.changePassword("John.Doe", "newPass");
+
+        assertEquals("newPass", trainee.getPassword());
+        verify(traineeRepository).save(trainee);
     }
 
     @Test
-    @DisplayName("GetById → should throw exception when trainee not found")
-    void getById_shouldThrowException_whenNotFound() {
-        when(dao.findTraineeById(1L)).thenReturn(Optional.empty());
+    @DisplayName("ChangePassword → should throw when user not found")
+    void changePassword_shouldThrow() {
+        when(traineeRepository.findByUsername("John.Doe")).thenReturn(Optional.empty());
 
-        TraineeNotFoundException ex = assertThrows(TraineeNotFoundException.class,
-                () -> service.getById(1L));
+        assertThrows(TraineeNotFoundException.class,
+                () -> service.changePassword("John.Doe", "pass"));
+    }
 
-        assertEquals("Trainee with id=1 not found", ex.getMessage());
+
+    @Test
+    @DisplayName("Activate → should activate inactive trainee")
+    void activate_shouldWork() {
+        trainee.setActive(false);
+
+        when(traineeRepository.findByUsername("John.Doe")).thenReturn(Optional.of(trainee));
+
+        service.activate("John.Doe");
+
+        assertTrue(trainee.getActive());
+        verify(traineeRepository).save(trainee);
     }
 
     @Test
-    @DisplayName("GetAll → should return all trainees from repository")
-    void getAll_shouldReturnAllTrainees() {
-        when(dao.findAllTrainees()).thenReturn(List.of(trainee));
+    @DisplayName("Activate → should throw if already active")
+    void activate_shouldThrow_whenAlreadyActive() {
+        trainee.setActive(true);
 
-        List<Trainee> result = service.getAll();
+        when(traineeRepository.findByUsername("John.Doe")).thenReturn(Optional.of(trainee));
+
+        assertThrows(IllegalStateException.class,
+                () -> service.activate("John.Doe"));
+    }
+
+    @Test
+    @DisplayName("Deactivate → should deactivate active trainee")
+    void deactivate_shouldWork() {
+        trainee.setActive(true);
+
+        when(traineeRepository.findByUsername("John.Doe")).thenReturn(Optional.of(trainee));
+
+        service.deactivate("John.Doe");
+
+        assertFalse(trainee.getActive());
+    }
+
+    @Test
+    @DisplayName("Deactivate → should throw if already inactive")
+    void deactivate_shouldThrow() {
+        trainee.setActive(false);
+
+        when(traineeRepository.findByUsername("John.Doe")).thenReturn(Optional.of(trainee));
+
+        assertThrows(IllegalStateException.class,
+                () -> service.deactivate("John.Doe"));
+    }
+
+    @Test
+    @DisplayName("UpdateTraineeTrainers → should replace trainers list")
+    void updateTraineeTrainers_shouldReplaceList() {
+        trainee.setTrainers(new HashSet<>(Set.of(new Trainer())));
+
+        List<Long> ids = List.of(1L, 2L);
+        List<Trainer> trainers = List.of(new Trainer(), new Trainer());
+
+        when(traineeRepository.findByUsername("John.Doe")).thenReturn(Optional.of(trainee));
+        when(trainerRepository.findAllById(ids)).thenReturn(trainers);
+
+        service.updateTraineeTrainers("John.Doe", ids);
+
+        assertEquals(2, trainee.getTrainers().size());
+    }
+
+    @Test
+    @DisplayName("GetUnassignedTrainers → should return list")
+    void getUnassigned_shouldReturnList() {
+        Trainee trainee = new Trainee();
+        trainee.setUsername("John.Doe");
+        when(traineeRepository.findByUsername("John.Doe")).thenReturn(Optional.of(trainee));
+        when(trainerRepository.findNotAssignedToTrainee("John.Doe"))
+                .thenReturn(List.of(new Trainer()));
+
+        List<Trainer> result = service.getUnassignedTrainers("John.Doe");
 
         assertEquals(1, result.size());
-        verify(dao).findAllTrainees();
+    }
+
+
+    @Test
+    @DisplayName("GetByUsername → should return trainee")
+    void getByUsername_shouldReturn() {
+        when(traineeRepository.findByUsername("John.Doe")).thenReturn(Optional.of(trainee));
+
+        assertEquals(trainee, service.getByUsername("John.Doe"));
     }
 
     @Test
-    @DisplayName("DeleteById → should call DAO delete method with correct ID")
-    void deleteById_shouldCallDaoDelete() {
-        service.deleteById(1L);
+    @DisplayName("GetByUsername → should throw when not found")
+    void getByUsername_shouldThrow() {
+        when(traineeRepository.findByUsername("John.Doe")).thenReturn(Optional.empty());
 
-        verify(dao).deleteTraineeById(1L);
+        assertThrows(TraineeNotFoundException.class,
+                () -> service.getByUsername("John.Doe"));
     }
 
     @Test
-    @DisplayName("Trainee.toString() → should contain all main fields")
-    void toString_shouldContainAllFields() {
-        Trainee trainee = new Trainee(
-                1L,
-                "John",
-                "Doe",
-                "John.Doe",
-                "password12",
-                true,
-                LocalDate.of(2000, 1, 1),
-                "Address"
-        );
+    @DisplayName("GetAll → should return list")
+    void getAll_shouldReturn() {
+        when(traineeRepository.findAll()).thenReturn(List.of(trainee));
 
-        String result = trainee.toString();
+        assertEquals(1, service.getAll().size());
+    }
 
-        assertAll(
-                () -> assertTrue(result.contains("John")),
-                () -> assertTrue(result.contains("Doe")),
-                () -> assertTrue(result.contains("John.Doe")),
-                () -> assertTrue(result.contains("password12")),
-                () -> assertTrue(result.contains("Address"))
-        );
+    @Test
+    @DisplayName("DeleteByUsername → should call repository")
+    void delete_shouldCallRepo() {
+        service.deleteByUsername("John.Doe");
+
+        verify(traineeRepository).deleteByUsername("John.Doe");
     }
 }
