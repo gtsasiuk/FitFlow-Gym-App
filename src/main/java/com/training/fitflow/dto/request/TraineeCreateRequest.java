@@ -7,7 +7,7 @@ import java.time.LocalDate;
 public record TraineeCreateRequest(
         @NotBlank String firstName,
         @NotBlank String lastName,
-        LocalDate birthDate,
+        LocalDate dateOfBirth,
         String address
 ) {
 }
