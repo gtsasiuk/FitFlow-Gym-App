@@ -24,6 +24,7 @@ import java.util.Properties;
 public class JpaConfig {
     @Bean
     public DataSource dataSource(
+            @Value("${database.driver}") String driver,
             @Value("${database.url}") String url,
             @Value("${database.username}") String username,
             @Value("${database.password}") String password
@@ -32,6 +33,7 @@ public class JpaConfig {
         dataSource.setJdbcUrl(url);
         dataSource.setUsername(username);
         dataSource.setPassword(password);
+        dataSource.setDriverClassName("org.postgresql.Driver");
         dataSource.setPoolName("FitFlowHikariCP");
         return dataSource;
     }
