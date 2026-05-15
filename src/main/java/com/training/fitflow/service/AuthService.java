@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -25,41 +27,44 @@ public class AuthService {
         ValidationUtil.notBlank(password, "Password");
     }
 
-    public Trainee authenticateTrainee(String username, String password) {
+    public void authenticate(String username, String password) {
         validateCredentials(username, password);
 
-        log.info("Authenticating trainee with username={}", username);
-        Trainee trainee = traineeRepository.findByUsername(username)
-                .orElseThrow(() -> new TraineeNotFoundException(username));
+        log.info("Authenticating user with username={}", username);
+        Optional<Trainee> traineeOpt = traineeRepository.findByUsername(username);
 
-        if (!trainee.getPassword().equals(password)) {
-            log.warn("Invalid password for trainee username={}", username);
-            throw new BadCredentialException(username);
+        if (traineeOpt.isPresent()) {
+            Trainee trainee = traineeOpt.get();
+
+            if (!trainee.getPassword().equals(password)) {
+                log.warn("Invalid password for trainee username={}", username);
+                throw new BadCredentialException(username);
+            }
+
+            if (!trainee.getActive()) {
+                throw new UserDeactivatedException(username);
+            }
+            log.info("Authenticating trainee with username={}", username);
+            return;
         }
 
-        if (!trainee.getActive()) {
-            throw new UserDeactivatedException(username);
+        Optional<Trainer> trainerOpt = trainerRepository.findByUsername(username);
+
+        if (trainerOpt.isPresent()) {
+            Trainer trainer = trainerOpt.get();
+
+            if (!trainer.getPassword().equals(password)) {
+                log.warn("Invalid password for trainer username={}", username);
+                throw new BadCredentialException(username);
+            }
+
+            if (!trainer.getActive()) {
+                throw new UserDeactivatedException(username);
+            }
+            log.info("Authenticating trainer with username={}", username);
+            return;
         }
 
-        return trainee;
-    }
-
-    public Trainer authenticateTrainer(String username, String password) {
-        validateCredentials(username, password);
-
-        log.info("Authenticating trainer with username={}", username);
-        Trainer trainer = trainerRepository.findByUsername(username)
-                .orElseThrow(() -> new TrainerNotFoundException(username));
-
-        if (!trainer.getPassword().equals(password)) {
-            log.warn("Invalid password for trainer username={}", username);
-            throw new BadCredentialException(username);
-        }
-
-        if (!trainer.getActive()) {
-            throw new UserDeactivatedException(username);
-        }
-
-        return trainer;
+        throw new BadCredentialException(username);
     }
 }
