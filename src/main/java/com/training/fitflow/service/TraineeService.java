@@ -1,6 +1,9 @@
 package com.training.fitflow.service;
 
+import com.training.fitflow.dto.request.TraineeCreateRequest;
+import com.training.fitflow.dto.response.TraineeCreateResponse;
 import com.training.fitflow.exception.TraineeNotFoundException;
+import com.training.fitflow.mapper.TraineeMapper;
 import com.training.fitflow.model.Trainee;
 import com.training.fitflow.model.Trainer;
 import com.training.fitflow.repository.TraineeRepository;
@@ -24,15 +27,9 @@ import java.util.Set;
 public class TraineeService {
     private final TraineeRepository traineeRepository;
     private final TrainerRepository trainerRepository;
+    private final TraineeMapper traineeMapper;
     private final UsernameGenerator usernameGenerator;
     private final PasswordGenerator passwordGenerator;
-
-    private void validateTraineeForCreate(Trainee trainee) {
-        ValidationUtil.notNull(trainee, "Trainee");
-
-        ValidationUtil.notBlank(trainee.getFirstName(), "First name");
-        ValidationUtil.notBlank(trainee.getLastName(), "Last name");
-    }
 
     private void validateTraineeForUpdate(Trainee trainee) {
         ValidationUtil.notNull(trainee.getId(), "Trainee ID");
@@ -52,10 +49,10 @@ public class TraineeService {
     }
 
     @Transactional
-    public Trainee create(Trainee trainee) {
-        log.info("Creating trainee: {} {}", trainee.getFirstName(), trainee.getLastName());
+    public TraineeCreateResponse create(TraineeCreateRequest request) {
+        log.info("Creating trainee: {} {}", request.firstName(), request.lastName());
 
-        validateTraineeForCreate(trainee);
+        Trainee trainee = traineeMapper.toEntity(request);
 
         String username = usernameGenerator.generate(trainee.getFirstName(), trainee.getLastName());
         String password = passwordGenerator.generate();
@@ -69,7 +66,7 @@ public class TraineeService {
         Trainee saved = traineeRepository.save(trainee);
         log.info("Trainee created successfully with id={}", saved.getId());
 
-        return saved;
+        return traineeMapper.toTraineeCreateResponse(saved);
     }
 
     @Transactional
