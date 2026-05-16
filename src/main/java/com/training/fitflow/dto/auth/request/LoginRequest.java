@@ -1,4 +1,4 @@
-package com.training.fitflow.dto.request;
+package com.training.fitflow.dto.auth.request;
 
 import jakarta.validation.constraints.NotBlank;
 

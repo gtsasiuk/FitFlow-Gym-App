@@ -1,4 +1,4 @@
-package com.training.fitflow.dto.response;
+package com.training.fitflow.dto.trainee.response;
 
 public record TraineeCreateResponse(
         String username,

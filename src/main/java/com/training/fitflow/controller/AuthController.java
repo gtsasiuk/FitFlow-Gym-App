@@ -1,6 +1,6 @@
 package com.training.fitflow.controller;
 
-import com.training.fitflow.dto.request.LoginRequest;
+import com.training.fitflow.dto.auth.request.LoginRequest;
 import com.training.fitflow.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

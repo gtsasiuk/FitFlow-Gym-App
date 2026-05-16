@@ -1,7 +1,7 @@
 package com.training.fitflow.controller;
 
-import com.training.fitflow.dto.request.TraineeCreateRequest;
-import com.training.fitflow.dto.response.TraineeCreateResponse;
+import com.training.fitflow.dto.trainee.request.TraineeCreateRequest;
+import com.training.fitflow.dto.trainee.response.TraineeCreateResponse;
 import com.training.fitflow.service.TraineeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

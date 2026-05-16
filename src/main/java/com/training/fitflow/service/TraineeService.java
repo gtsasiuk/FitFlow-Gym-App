@@ -1,7 +1,7 @@
 package com.training.fitflow.service;
 
-import com.training.fitflow.dto.request.TraineeCreateRequest;
-import com.training.fitflow.dto.response.TraineeCreateResponse;
+import com.training.fitflow.dto.trainee.request.TraineeCreateRequest;
+import com.training.fitflow.dto.trainee.response.TraineeCreateResponse;
 import com.training.fitflow.exception.TraineeNotFoundException;
 import com.training.fitflow.mapper.TraineeMapper;
 import com.training.fitflow.model.Trainee;
