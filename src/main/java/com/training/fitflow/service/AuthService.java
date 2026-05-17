@@ -1,8 +1,6 @@
 package com.training.fitflow.service;
 
 import com.training.fitflow.exception.BadCredentialException;
-import com.training.fitflow.exception.TraineeNotFoundException;
-import com.training.fitflow.exception.TrainerNotFoundException;
 import com.training.fitflow.exception.UserDeactivatedException;
 import com.training.fitflow.model.Trainee;
 import com.training.fitflow.model.Trainer;

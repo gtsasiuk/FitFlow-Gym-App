@@ -1,19 +1,22 @@
 package com.training.fitflow.config;
 
-import org.jspecify.annotations.Nullable;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 public class WebAppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+    public WebAppInitializer() {
+        System.out.println(">>> WebAppInitializer LOADED");
+    }
     @Override
-    protected Class<?> @Nullable [] getRootConfigClasses() {
+    protected Class<?>[] getRootConfigClasses() {
         return new Class[]{
                 AppConfig.class,
-                JpaConfig.class
+                JpaConfig.class,
+                FlywayConfig.class
         };
     }
 
     @Override
-    protected Class<?> @Nullable [] getServletConfigClasses() {
+    protected Class<?>[] getServletConfigClasses() {
         return new Class[]{
                 WebConfig.class
         };
