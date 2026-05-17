@@ -94,21 +94,6 @@ public class TraineeService {
     }
 
     @Transactional
-    public void changePassword(String username, String newPassword) {
-        validateTraineeForNewPassword(username, newPassword);
-        log.info("Changing password for trainee username={}", username);
-
-        Trainee trainee = traineeRepository.findByUsername(username)
-                .orElseThrow(() -> new TraineeNotFoundException(username));
-
-        trainee.setPassword(newPassword);
-
-        traineeRepository.save(trainee);
-
-        log.info("Password changed successfully for username={}", username);
-    }
-
-    @Transactional
     public void activate(String username) {
         log.info("Activating trainee username={}", username);
 

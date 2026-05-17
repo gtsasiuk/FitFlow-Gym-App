@@ -91,21 +91,6 @@ public class TrainerService {
     }
 
     @Transactional
-    public void changePassword(String username, String newPassword) {
-        validateTrainerForNewPassword(username, newPassword);
-        log.info("Changing password for trainer username={}", username);
-
-        Trainer trainer = trainerRepository.findByUsername(username)
-                .orElseThrow(() -> new TrainerNotFoundException(username));
-
-        trainer.setPassword(newPassword);
-
-        trainerRepository.save(trainer);
-
-        log.info("Password changed successfully for username={}", username);
-    }
-
-    @Transactional
     public void activate(String username) {
         log.info("Activating trainer username={}", username);
 

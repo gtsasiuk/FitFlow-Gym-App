@@ -20,14 +20,7 @@ public class AuthService {
     private final TraineeRepository traineeRepository;
     private final TrainerRepository trainerRepository;
 
-    private void validateCredentials(String username, String password) {
-        ValidationUtil.notBlank(username, "Username");
-        ValidationUtil.notBlank(password, "Password");
-    }
-
     public void authenticate(String username, String password) {
-        validateCredentials(username, password);
-
         log.info("Authenticating user with username={}", username);
         Optional<Trainee> traineeOpt = traineeRepository.findByUsername(username);
 
@@ -60,6 +53,38 @@ public class AuthService {
                 throw new UserDeactivatedException(username);
             }
             log.info("Authenticating trainer with username={}", username);
+            return;
+        }
+
+        throw new BadCredentialException(username);
+    }
+
+    public void changePassword(String username, String oldPassword, String newPassword) {
+        log.info("Changing password for username={}", username);
+
+        Optional<Trainee> traineeOpt = traineeRepository.findByUsername(username);
+        if (traineeOpt.isPresent()) {
+            Trainee trainee = traineeOpt.get();
+            if (!trainee.getPassword().equals(oldPassword)) {
+                log.warn("Invalid old password for username={}", username);
+                throw new BadCredentialException(username);
+            }
+            trainee.setPassword(newPassword);
+            traineeRepository.save(trainee);
+            log.info("Password changed for username={}", username);
+            return;
+        }
+
+        Optional<Trainer> trainerOpt = trainerRepository.findByUsername(username);
+        if (trainerOpt.isPresent()) {
+            Trainer trainer = trainerOpt.get();
+            if (!trainer.getPassword().equals(oldPassword)) {
+                log.warn("Invalid old password for username={}", username);
+                throw new BadCredentialException(username);
+            }
+            trainer.setPassword(newPassword);
+            trainerRepository.save(trainer);
+            log.info("Password changed for username={}", username);
             return;
         }
 
