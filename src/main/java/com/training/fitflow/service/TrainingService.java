@@ -1,8 +1,12 @@
 package com.training.fitflow.service;
 
+import com.training.fitflow.dto.training.request.TrainingCreateRequest;
 import com.training.fitflow.exception.TraineeNotFoundException;
 import com.training.fitflow.exception.TrainerNotFoundException;
 import com.training.fitflow.exception.TrainingNotFoundException;
+import com.training.fitflow.mapper.TrainingMapper;
+import com.training.fitflow.model.Trainee;
+import com.training.fitflow.model.Trainer;
 import com.training.fitflow.model.Training;
 import com.training.fitflow.repository.TraineeRepository;
 import com.training.fitflow.repository.TrainerRepository;
@@ -22,32 +26,36 @@ public class TrainingService {
     private final TraineeRepository traineeRepository;
     private final TrainerRepository trainerRepository;
     private final TrainingRepository trainingRepository;
+    private final TrainingMapper trainingMapper;
 
     @Transactional
-    public Training create(Training training) {
-        log.info("Creating training: name={}, trainerId={}, traineeId={}",
-                training.getName(),
-                training.getTrainer().getId(),
-                training.getTrainee().getId()
+    public void create(TrainingCreateRequest request) {
+        log.info("Creating training: name={}, trainerUsername={}, traineeUsername={}",
+                request.trainingName(),
+                request.trainerUsername(),
+                request.traineeUsername()
         );
+        Training training = trainingMapper.toEntity(request);
 
-        trainerRepository.findById(training.getTrainer().getId())
+        Trainer trainer = trainerRepository.findByUsername(request.trainerUsername())
                 .orElseThrow(() -> {
-                    log.warn("Trainer not found username={}", training.getTrainer().getUsername());
-                    return new TrainerNotFoundException(training.getTrainer().getUsername());
+                    log.warn("Trainer not found username={}", request.trainerUsername());
+                    return new TrainerNotFoundException(request.trainerUsername());
                 });
 
-        traineeRepository.findById(training.getTrainee().getId())
+        Trainee trainee = traineeRepository.findByUsername(request.traineeUsername())
                 .orElseThrow(() -> {
-                    log.warn("Trainee not found username={}", training.getTrainee().getUsername());
-                    return new TraineeNotFoundException(training.getTrainee().getUsername());
+                    log.warn("Trainee not found username={}", request.traineeUsername());
+                    return new TraineeNotFoundException(request.traineeUsername());
                 });
+
+        training.setTrainer(trainer);
+        training.setTrainee(trainee);
+        training.setType(trainer.getSpecialization());
 
         Training saved = trainingRepository.save(training);
 
         log.info("Training created successfully with id={}", saved.getId());
-
-        return saved;
     }
 
     public List<Training> getTraineeTrainings(
