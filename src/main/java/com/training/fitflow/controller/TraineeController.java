@@ -6,6 +6,7 @@ import com.training.fitflow.dto.trainee.response.TraineeCreateResponse;
 import com.training.fitflow.dto.trainee.response.TraineeProfileResponse;
 import com.training.fitflow.dto.trainee.response.TraineeSummaryResponse;
 import com.training.fitflow.dto.trainee.response.TraineeUpdateResponse;
+import com.training.fitflow.dto.trainer.request.TraineeTrainersUpdateRequest;
 import com.training.fitflow.dto.trainer.response.TrainerSummaryResponse;
 import com.training.fitflow.service.TraineeService;
 import jakarta.validation.Valid;
@@ -44,6 +45,13 @@ public class TraineeController {
     public ResponseEntity<TraineeUpdateResponse> updateTraineeProfile(@PathVariable("username") String username,
             @Valid @RequestBody TraineeUpdateRequest request) {
         TraineeUpdateResponse response = traineeService.update(username, request);
+        return ResponseEntity.ok().body(response);
+    }
+
+    @PutMapping("/{username}/trainers")
+    public ResponseEntity<List<TrainerSummaryResponse>> updateTraineeProfile(@PathVariable("username") String username,
+            @Valid @RequestBody TraineeTrainersUpdateRequest request) {
+        List<TrainerSummaryResponse> response = traineeService.updateTraineeTrainers(username, request);
         return ResponseEntity.ok().body(response);
     }
 

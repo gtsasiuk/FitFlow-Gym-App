@@ -5,6 +5,7 @@ import com.training.fitflow.dto.trainee.request.TraineeUpdateRequest;
 import com.training.fitflow.dto.trainee.response.TraineeCreateResponse;
 import com.training.fitflow.dto.trainee.response.TraineeProfileResponse;
 import com.training.fitflow.dto.trainee.response.TraineeUpdateResponse;
+import com.training.fitflow.dto.trainer.request.TraineeTrainersUpdateRequest;
 import com.training.fitflow.dto.trainer.response.TrainerSummaryResponse;
 import com.training.fitflow.dto.trainer.response.TrainerUpdateResponse;
 import com.training.fitflow.exception.TraineeNotFoundException;
@@ -37,11 +38,6 @@ public class TraineeService {
     private final UsernameGenerator usernameGenerator;
     private final PasswordGenerator passwordGenerator;
     private final TrainerMapper trainerMapper;
-
-    private void validateTraineeForTrainersUpdate(String username, List<Long> trainerIds) {
-        ValidationUtil.notBlank(username, "Username");
-        ValidationUtil.notNull(trainerIds, "Trainer IDs list");
-    }
 
     @Transactional
     public TraineeCreateResponse create(TraineeCreateRequest request) {
@@ -133,9 +129,8 @@ public class TraineeService {
     }
 
     @Transactional
-    public void updateTraineeTrainers(String username, List<Long> trainerIds) {
-        validateTraineeForTrainersUpdate(username, trainerIds);
-        log.info("Updating trainee trainers list username={}, trainerIds={}", username, trainerIds);
+    public List<TrainerSummaryResponse> updateTraineeTrainers(String username, TraineeTrainersUpdateRequest request) {
+        log.info("Updating trainee trainers list username={}, trainerUsernames={}", username, request.trainerUsernames());
 
         Trainee trainee = traineeRepository.findByUsername(username)
                 .orElseThrow(() -> {
@@ -144,19 +139,25 @@ public class TraineeService {
                 });
 
         Set<Trainer> newTrainers = new HashSet<>(
-                trainerRepository.findAllById(trainerIds)
+                trainerRepository.findAllByUsernameIn(request.trainerUsernames())
         );
 
         log.debug("Fetched trainers for assignment username={}, found={}/{}",
-                username, newTrainers.size(), trainerIds.size());
+                username, newTrainers.size(), request.trainerUsernames().size());
 
         int beforeSize = trainee.getTrainers() != null ? trainee.getTrainers().size() : 0;
 
         trainee.getTrainers().clear();
         trainee.getTrainers().addAll(newTrainers);
 
+        traineeRepository.save(trainee);
+
+        List<TrainerSummaryResponse> response = trainerMapper.toSummaryResponseList(newTrainers);
+
         log.info("Trainee trainers updated successfully username={}, beforeCount={}, afterCount={}",
                 username, beforeSize, newTrainers.size());
+
+        return response;
     }
 
     @Transactional

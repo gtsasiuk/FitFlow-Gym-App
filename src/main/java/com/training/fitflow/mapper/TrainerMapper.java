@@ -9,6 +9,9 @@ import com.training.fitflow.model.Trainer;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.List;
+import java.util.Set;
+
 @Mapper(componentModel = "spring")
 public interface TrainerMapper {
     @Mapping(target = "id", ignore = true)
@@ -30,4 +33,6 @@ public interface TrainerMapper {
     TrainerUpdateResponse toUpdateResponse(Trainer trainer);
 
     TrainerSummaryResponse toSummaryResponse(Trainer trainer);
+
+    List<TrainerSummaryResponse> toSummaryResponseList(Set<Trainer> trainers);
 }
