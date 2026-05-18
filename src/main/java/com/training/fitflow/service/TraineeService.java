@@ -38,11 +38,6 @@ public class TraineeService {
         ValidationUtil.notBlank(trainee.getLastName(), "Last name");
     }
 
-    private void validateTraineeForNewPassword(String username, String newPassword) {
-        ValidationUtil.notBlank(username, "Username");
-        ValidationUtil.notBlank(newPassword, "New password");
-    }
-
     private void validateTraineeForTrainersUpdate(String username, List<Long> trainerIds) {
         ValidationUtil.notBlank(username, "Username");
         ValidationUtil.notNull(trainerIds, "Trainer IDs list");
@@ -180,6 +175,13 @@ public class TraineeService {
     @Transactional
     public void deleteByUsername(String username) {
         log.info("Deleting trainee username={}", username);
-        traineeRepository.deleteByUsername(username);
+        Trainee trainee = traineeRepository.findByUsername(username)
+                .orElseThrow(() -> new TraineeNotFoundException(username));
+
+        trainee.getTrainers().clear();
+        traineeRepository.save(trainee);
+
+        traineeRepository.delete(trainee);
+        log.info("Trainee deleted username={}", username);
     }
 }

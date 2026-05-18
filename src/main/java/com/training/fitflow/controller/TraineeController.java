@@ -7,10 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/trainees")
@@ -22,5 +19,11 @@ public class TraineeController {
     public ResponseEntity<TraineeCreateResponse> createTrainee(@Valid @RequestBody TraineeCreateRequest request) {
         TraineeCreateResponse response = traineeService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @DeleteMapping("/{username}")
+    public ResponseEntity<Void> deleteTrainee(@PathVariable("username") String username) {
+        traineeService.deleteByUsername(username);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
