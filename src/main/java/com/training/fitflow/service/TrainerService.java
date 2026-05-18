@@ -1,8 +1,10 @@
 package com.training.fitflow.service;
 
 import com.training.fitflow.dto.trainer.request.TrainerCreateRequest;
+import com.training.fitflow.dto.trainer.request.TrainerUpdateRequest;
 import com.training.fitflow.dto.trainer.response.TrainerCreateResponse;
 import com.training.fitflow.dto.trainer.response.TrainerProfileResponse;
+import com.training.fitflow.dto.trainer.response.TrainerUpdateResponse;
 import com.training.fitflow.exception.TrainerNotFoundException;
 import com.training.fitflow.mapper.TrainerMapper;
 import com.training.fitflow.model.Trainer;
@@ -31,15 +33,6 @@ public class TrainerService {
     private final UsernameGenerator usernameGenerator;
     private final PasswordGenerator passwordGenerator;
 
-    private void validateTrainerForUpdate(Trainer trainer) {
-        ValidationUtil.notNull(trainer.getId(), "Trainer ID");
-
-        ValidationUtil.notBlank(trainer.getFirstName(), "First name");
-        ValidationUtil.notBlank(trainer.getLastName(), "Last name");
-
-        ValidationUtil.notNull(trainer.getSpecialization(), "Specialization");
-    }
-
     @Transactional
     public TrainerCreateResponse create(TrainerCreateRequest request) {
         log.info("Creating trainer: {} {}", request.firstName(), request.lastName());
@@ -65,25 +58,21 @@ public class TrainerService {
     }
 
     @Transactional
-    public Trainer update(Trainer trainer) {
-        log.info("Updating trainer id={}", trainer.getId());
+    public TrainerUpdateResponse update(String username, TrainerUpdateRequest request) {
+        log.info("Updating trainer with username={}", username);
 
-        validateTrainerForUpdate(trainer);
-
-        Trainer existingTrainer = trainerRepository.findById(trainer.getId())
+        Trainer existingTrainer = trainerRepository.findByUsername(username)
                 .orElseThrow(() -> {
-                    log.warn("Trainer not found id={}", trainer.getId());
-                    return new TrainerNotFoundException(trainer.getUsername());
+                    log.warn("Trainer not found username={}", username);
+                    return new TrainerNotFoundException(username);
                 });
 
-        UserUpdateUtil.updateNameFields(existingTrainer, trainer.getFirstName(), trainer.getLastName(), usernameGenerator);
-        existingTrainer.setSpecialization(trainer.getSpecialization());
+        UserUpdateUtil.updateNameFields(existingTrainer, request.firstName(), request.lastName(), usernameGenerator);
 
         Trainer updated = trainerRepository.save(existingTrainer);
-
         log.info("Trainer updated successfully id={}", updated.getId());
 
-        return updated;
+        return trainerMapper.toUpdateResponse(updated);
     }
 
     @Transactional

@@ -1,8 +1,10 @@
 package com.training.fitflow.controller;
 
 import com.training.fitflow.dto.trainer.request.TrainerCreateRequest;
+import com.training.fitflow.dto.trainer.request.TrainerUpdateRequest;
 import com.training.fitflow.dto.trainer.response.TrainerCreateResponse;
 import com.training.fitflow.dto.trainer.response.TrainerProfileResponse;
+import com.training.fitflow.dto.trainer.response.TrainerUpdateResponse;
 import com.training.fitflow.service.TrainerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,13 @@ public class TrainerController {
     @GetMapping("/{username}")
     public ResponseEntity<TrainerProfileResponse> getTrainerProfile(@PathVariable("username") String username) {
         TrainerProfileResponse response = trainerService.getByUsername(username);
+        return ResponseEntity.ok().body(response);
+    }
+
+    @PutMapping("/{username}")
+    public ResponseEntity<TrainerUpdateResponse> getTrainerProfile(@PathVariable("username") String username,
+                                                                   @Valid @RequestBody TrainerUpdateRequest request) {
+        TrainerUpdateResponse response = trainerService.update(username, request);
         return ResponseEntity.ok().body(response);
     }
 }

@@ -1,7 +1,6 @@
 package com.training.fitflow.mapper;
 
 import com.training.fitflow.dto.trainee.request.TraineeCreateRequest;
-import com.training.fitflow.dto.trainee.request.TraineeUpdateRequest;
 import com.training.fitflow.dto.trainee.response.TraineeCreateResponse;
 import com.training.fitflow.dto.trainee.response.TraineeProfileResponse;
 import com.training.fitflow.dto.trainee.response.TraineeUpdateResponse;

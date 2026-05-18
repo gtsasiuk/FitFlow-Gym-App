@@ -76,7 +76,6 @@ public class TraineeService {
         existingTrainee.setLastName(request.lastName());
         existingTrainee.setDateOfBirth(request.dateOfBirth());
         existingTrainee.setAddress(request.address());
-        existingTrainee.setActive(request.isActive());
 
         Trainee updated = traineeRepository.save(existingTrainee);
         log.info("Trainee updated successfully id={}", updated.getId());
