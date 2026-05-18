@@ -2,6 +2,7 @@ package com.training.fitflow.service;
 
 import com.training.fitflow.dto.trainer.request.TrainerCreateRequest;
 import com.training.fitflow.dto.trainer.response.TrainerCreateResponse;
+import com.training.fitflow.dto.trainer.response.TrainerProfileResponse;
 import com.training.fitflow.exception.TrainerNotFoundException;
 import com.training.fitflow.mapper.TrainerMapper;
 import com.training.fitflow.model.Trainer;
@@ -37,11 +38,6 @@ public class TrainerService {
         ValidationUtil.notBlank(trainer.getLastName(), "Last name");
 
         ValidationUtil.notNull(trainer.getSpecialization(), "Specialization");
-    }
-
-    private void validateTrainerForNewPassword(String username, String newPassword) {
-        ValidationUtil.notBlank(username, "Username");
-        ValidationUtil.notBlank(newPassword, "New password");
     }
 
     @Transactional
@@ -124,13 +120,15 @@ public class TrainerService {
         log.info("Trainer deactivated username={}", username);
     }
 
-    public Trainer getByUsername(String username) {
+    @Transactional
+    public TrainerProfileResponse getByUsername(String username) {
         log.debug("Fetching trainer by username={}", username);
-        return trainerRepository.findByUsername(username)
+        Trainer trainer = trainerRepository.findByUsername(username)
                 .orElseThrow(() -> {
                     log.warn("Trainer not found username={}", username);
                     return new TrainerNotFoundException(username);
                 });
+        return trainerMapper.toProfileResponse(trainer);
     }
 
     public List<Trainer> getAll() {

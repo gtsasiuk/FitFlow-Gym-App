@@ -3,6 +3,7 @@ package com.training.fitflow.mapper;
 import com.training.fitflow.dto.trainee.request.TraineeCreateRequest;
 import com.training.fitflow.dto.trainee.response.TraineeCreateResponse;
 import com.training.fitflow.dto.trainee.response.TraineeProfileResponse;
+import com.training.fitflow.dto.trainee.response.TraineeSummaryResponse;
 import com.training.fitflow.model.Trainee;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -22,4 +23,6 @@ public   interface TraineeMapper {
     @Mapping(target = "isActive", source = "active")
     @Mapping(target = "trainers", source = "trainers")
     TraineeProfileResponse toProfileResponse(Trainee trainee);
+
+    TraineeSummaryResponse toTraineeSummary(Trainee trainee);
 }
