@@ -3,13 +3,12 @@ package com.training.fitflow.mapper;
 import com.training.fitflow.dto.trainee.request.TraineeCreateRequest;
 import com.training.fitflow.dto.trainee.response.TraineeCreateResponse;
 import com.training.fitflow.dto.trainee.response.TraineeProfileResponse;
-import com.training.fitflow.dto.trainee.response.TraineeSummaryResponse;
 import com.training.fitflow.model.Trainee;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", uses = {TrainerMapper.class})
-public   interface TraineeMapper {
+@Mapper(componentModel = "spring")
+public interface TraineeMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "username", ignore = true)
     @Mapping(target = "password", ignore = true)
@@ -23,6 +22,4 @@ public   interface TraineeMapper {
     @Mapping(target = "isActive", source = "active")
     @Mapping(target = "trainers", source = "trainers")
     TraineeProfileResponse toProfileResponse(Trainee trainee);
-
-    TraineeSummaryResponse toTraineeSummary(Trainee trainee);
 }
