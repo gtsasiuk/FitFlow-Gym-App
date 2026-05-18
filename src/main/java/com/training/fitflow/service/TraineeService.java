@@ -5,8 +5,11 @@ import com.training.fitflow.dto.trainee.request.TraineeUpdateRequest;
 import com.training.fitflow.dto.trainee.response.TraineeCreateResponse;
 import com.training.fitflow.dto.trainee.response.TraineeProfileResponse;
 import com.training.fitflow.dto.trainee.response.TraineeUpdateResponse;
+import com.training.fitflow.dto.trainer.response.TrainerSummaryResponse;
+import com.training.fitflow.dto.trainer.response.TrainerUpdateResponse;
 import com.training.fitflow.exception.TraineeNotFoundException;
 import com.training.fitflow.mapper.TraineeMapper;
+import com.training.fitflow.mapper.TrainerMapper;
 import com.training.fitflow.model.Trainee;
 import com.training.fitflow.model.Trainer;
 import com.training.fitflow.repository.TraineeRepository;
@@ -33,6 +36,7 @@ public class TraineeService {
     private final TraineeMapper traineeMapper;
     private final UsernameGenerator usernameGenerator;
     private final PasswordGenerator passwordGenerator;
+    private final TrainerMapper trainerMapper;
 
     private void validateTraineeForTrainersUpdate(String username, List<Long> trainerIds) {
         ValidationUtil.notBlank(username, "Username");
@@ -155,12 +159,16 @@ public class TraineeService {
                 username, beforeSize, newTrainers.size());
     }
 
-    public List<Trainer> getUnassignedTrainers(String username) {
+    @Transactional
+    public List<TrainerSummaryResponse> getUnassignedTrainers(String username) {
         log.debug("Fetching all unassigned trainers for trainee by username={}", username);
         Trainee trainee = traineeRepository.findByUsername(username)
                 .orElseThrow(() -> new TraineeNotFoundException(username));
 
-        return trainerRepository.findNotAssignedToTrainee(trainee.getUsername());
+        return trainerRepository.findNotAssignedToTrainee(trainee.getUsername())
+                .stream()
+                .map(trainerMapper::toSummaryResponse)
+                .toList();
     }
 
     public List<Trainee> getAll() {
