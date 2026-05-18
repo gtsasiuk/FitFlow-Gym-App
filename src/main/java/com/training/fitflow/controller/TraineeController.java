@@ -2,6 +2,7 @@ package com.training.fitflow.controller;
 
 import com.training.fitflow.dto.trainee.request.TraineeCreateRequest;
 import com.training.fitflow.dto.trainee.response.TraineeCreateResponse;
+import com.training.fitflow.dto.trainee.response.TraineeProfileResponse;
 import com.training.fitflow.service.TraineeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,12 @@ public class TraineeController {
     public ResponseEntity<TraineeCreateResponse> createTrainee(@Valid @RequestBody TraineeCreateRequest request) {
         TraineeCreateResponse response = traineeService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/{username}")
+    public ResponseEntity<TraineeProfileResponse> getTraineeProfile(@PathVariable("username") String username) {
+        TraineeProfileResponse response = traineeService.getByUsername(username);
+        return ResponseEntity.ok().body(response);
     }
 
     @DeleteMapping("/{username}")

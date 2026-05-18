@@ -2,6 +2,7 @@ package com.training.fitflow.mapper;
 
 import com.training.fitflow.dto.trainer.request.TrainerCreateRequest;
 import com.training.fitflow.dto.trainer.response.TrainerCreateResponse;
+import com.training.fitflow.dto.trainer.response.TrainerSummaryResponse;
 import com.training.fitflow.model.Trainer;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -17,4 +18,8 @@ public interface TrainerMapper {
     Trainer toEntity(TrainerCreateRequest trainerCreateRequest);
 
     TrainerCreateResponse toCreateResponse(Trainer trainer);
+
+    @Mapping(target = "specializationId", source = "specialization.id")
+    @Mapping(target = "specializationName", source = "specialization.name")
+    TrainerSummaryResponse toTrainerSummary(Trainer trainer);
 }

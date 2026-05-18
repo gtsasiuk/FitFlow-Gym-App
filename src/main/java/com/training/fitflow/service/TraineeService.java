@@ -2,6 +2,7 @@ package com.training.fitflow.service;
 
 import com.training.fitflow.dto.trainee.request.TraineeCreateRequest;
 import com.training.fitflow.dto.trainee.response.TraineeCreateResponse;
+import com.training.fitflow.dto.trainee.response.TraineeProfileResponse;
 import com.training.fitflow.exception.TraineeNotFoundException;
 import com.training.fitflow.mapper.TraineeMapper;
 import com.training.fitflow.model.Trainee;
@@ -122,14 +123,15 @@ public class TraineeService {
         log.info("Trainee deactivated username={}", username);
     }
 
-    public Trainee getByUsername(String username) {
+    @Transactional
+    public TraineeProfileResponse getByUsername(String username) {
         log.debug("Fetching trainee by username={}", username);
-
-        return traineeRepository.findByUsername(username)
+        Trainee trainee = traineeRepository.findByUsername(username)
                 .orElseThrow(() -> {
                     log.warn("Trainee not found username={}", username);
                     return new TraineeNotFoundException(username);
                 });
+        return traineeMapper.toProfileResponse(trainee);
     }
 
     @Transactional
