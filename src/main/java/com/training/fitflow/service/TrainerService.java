@@ -14,7 +14,6 @@ import com.training.fitflow.repository.TrainingTypeRepository;
 import com.training.fitflow.util.PasswordGenerator;
 import com.training.fitflow.util.UsernameGenerator;
 import com.training.fitflow.util.UserUpdateUtil;
-import com.training.fitflow.util.ValidationUtil;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

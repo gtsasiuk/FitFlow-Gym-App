@@ -7,7 +7,6 @@ import com.training.fitflow.model.Training;
 import com.training.fitflow.repository.TraineeRepository;
 import com.training.fitflow.repository.TrainerRepository;
 import com.training.fitflow.repository.TrainingRepository;
-import com.training.fitflow.util.ValidationUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +30,6 @@ public class TrainingService {
                 training.getTrainer().getId(),
                 training.getTrainee().getId()
         );
-
-        validateTraining(training);
 
         trainerRepository.findById(training.getTrainer().getId())
                 .orElseThrow(() -> {
@@ -96,19 +93,5 @@ public class TrainingService {
     public List<Training> getAll() {
         log.debug("Fetching all trainings");
         return trainingRepository.findAll();
-    }
-
-    private void validateTraining(Training training) {
-        ValidationUtil.notBlank(training.getName(), "Training name");
-        ValidationUtil.notNull(training.getDate(), "Training date");
-        ValidationUtil.positive(training.getDuration(), "Training duration");
-
-        ValidationUtil.notNull(training.getTrainer(), "Trainer");
-        ValidationUtil.notNull(training.getTrainer().getId(), "Trainer ID");
-
-        ValidationUtil.notNull(training.getTrainee(), "Trainee");
-        ValidationUtil.notNull(training.getTrainee().getId(), "Trainee ID");
-
-        ValidationUtil.notNull(training.getType(), "Training type");
     }
 }
