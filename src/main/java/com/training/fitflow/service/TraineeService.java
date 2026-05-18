@@ -1,8 +1,10 @@
 package com.training.fitflow.service;
 
 import com.training.fitflow.dto.trainee.request.TraineeCreateRequest;
+import com.training.fitflow.dto.trainee.request.TraineeUpdateRequest;
 import com.training.fitflow.dto.trainee.response.TraineeCreateResponse;
 import com.training.fitflow.dto.trainee.response.TraineeProfileResponse;
+import com.training.fitflow.dto.trainee.response.TraineeUpdateResponse;
 import com.training.fitflow.exception.TraineeNotFoundException;
 import com.training.fitflow.mapper.TraineeMapper;
 import com.training.fitflow.model.Trainee;
@@ -32,13 +34,6 @@ public class TraineeService {
     private final UsernameGenerator usernameGenerator;
     private final PasswordGenerator passwordGenerator;
 
-    private void validateTraineeForUpdate(Trainee trainee) {
-        ValidationUtil.notNull(trainee.getId(), "Trainee ID");
-
-        ValidationUtil.notBlank(trainee.getFirstName(), "First name");
-        ValidationUtil.notBlank(trainee.getLastName(), "Last name");
-    }
-
     private void validateTraineeForTrainersUpdate(String username, List<Long> trainerIds) {
         ValidationUtil.notBlank(username, "Username");
         ValidationUtil.notNull(trainerIds, "Trainer IDs list");
@@ -66,27 +61,27 @@ public class TraineeService {
     }
 
     @Transactional
-    public Trainee update(Trainee trainee) {
-        log.info("Updating trainee with id={}", trainee.getId());
+    public TraineeUpdateResponse update(String username, TraineeUpdateRequest request) {
+        log.info("Updating trainee with username={}", username);
 
-        validateTraineeForUpdate(trainee);
-
-        Trainee existingTrainee = traineeRepository.findById(trainee.getId())
+        Trainee existingTrainee = traineeRepository.findByUsername(username)
                 .orElseThrow(() -> {
-                    log.warn("Trainee not found id={}", trainee.getId());
-                    return new TraineeNotFoundException(trainee.getUsername());
+                    log.warn("Trainee not found username={}", username);
+                    return new TraineeNotFoundException(username);
                 });
 
-        UserUpdateUtil.updateNameFields(existingTrainee, trainee.getFirstName(), trainee.getLastName(), usernameGenerator);
+        UserUpdateUtil.updateNameFields(existingTrainee, request.firstName(), request.lastName(), usernameGenerator);
 
-        existingTrainee.setAddress(trainee.getAddress());
-        existingTrainee.setDateOfBirth(trainee.getDateOfBirth());
+        existingTrainee.setFirstName(request.firstName());
+        existingTrainee.setLastName(request.lastName());
+        existingTrainee.setDateOfBirth(request.dateOfBirth());
+        existingTrainee.setAddress(request.address());
+        existingTrainee.setActive(request.isActive());
 
         Trainee updated = traineeRepository.save(existingTrainee);
-
         log.info("Trainee updated successfully id={}", updated.getId());
 
-        return updated;
+        return traineeMapper.toTraineeUpdateResponse(updated);
     }
 
     @Transactional
