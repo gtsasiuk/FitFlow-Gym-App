@@ -67,6 +67,10 @@ public class TrainingService {
             String trainerName,
             Long typeId
     ) {
+        trainerName = (trainerName == null || trainerName.isBlank())
+                ? null
+                : trainerName;
+
         log.info("Getting trainee trainings username={}", username);
 
         traineeRepository.findByUsername(username)
@@ -85,6 +89,10 @@ public class TrainingService {
             String traineeName
     ) {
         log.info("Getting trainer trainings username={}", username);
+
+        traineeName = (traineeName == null || traineeName.isBlank())
+                ? null
+                : traineeName;
 
         trainerRepository.findByUsername(username)
                 .orElseThrow(() -> new TrainerNotFoundException(username));

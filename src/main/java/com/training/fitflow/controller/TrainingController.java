@@ -40,7 +40,7 @@ public class TrainingController {
     }
 
     @GetMapping("/trainer")
-    public ResponseEntity<List<TrainerTrainingResponse>> getTraineeTrainings(
+    public ResponseEntity<List<TrainerTrainingResponse>> getTrainerTrainings(
             @RequestParam("username") String username,
             @RequestParam(name = "fromDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
             @RequestParam(name = "toDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
