@@ -1,6 +1,8 @@
 package com.training.fitflow.service;
 
 import com.training.fitflow.dto.training.request.TrainingCreateRequest;
+import com.training.fitflow.dto.training.response.TraineeTrainingResponse;
+import com.training.fitflow.dto.training.response.TrainerTrainingResponse;
 import com.training.fitflow.exception.TraineeNotFoundException;
 import com.training.fitflow.exception.TrainerNotFoundException;
 import com.training.fitflow.exception.TrainingNotFoundException;
@@ -58,7 +60,7 @@ public class TrainingService {
         log.info("Training created successfully with id={}", saved.getId());
     }
 
-    public List<Training> getTraineeTrainings(
+    public List<TraineeTrainingResponse> getTraineeTrainings(
             String username,
             LocalDate fromDate,
             LocalDate toDate,
@@ -70,11 +72,13 @@ public class TrainingService {
         traineeRepository.findByUsername(username)
                 .orElseThrow(() -> new TraineeNotFoundException(username));
 
-        return trainingRepository.findTraineeTrainings(
-                username, fromDate, toDate, trainerName, typeId);
+        return trainingRepository.findTraineeTrainings(username, fromDate, toDate, trainerName, typeId)
+                .stream()
+                .map(trainingMapper::toTraineeTrainingResponse)
+                .toList();
     }
 
-    public List<Training> getTrainerTrainings(
+    public List<TrainerTrainingResponse> getTrainerTrainings(
             String username,
             LocalDate fromDate,
             LocalDate toDate,
@@ -85,8 +89,10 @@ public class TrainingService {
         trainerRepository.findByUsername(username)
                 .orElseThrow(() -> new TrainerNotFoundException(username));
 
-        return trainingRepository.findTrainerTrainings(
-                username, fromDate, toDate, traineeName);
+        return trainingRepository.findTrainerTrainings(username, fromDate, toDate, traineeName)
+                .stream()
+                .map(trainingMapper::toTrainerTrainingResponse)
+                .toList();
     }
 
     public Training getById(Long id) {
