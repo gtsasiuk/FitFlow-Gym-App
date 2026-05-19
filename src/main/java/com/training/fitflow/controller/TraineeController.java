@@ -1,10 +1,10 @@
 package com.training.fitflow.controller;
 
+import com.training.fitflow.dto.common.request.UserStatusUpdateRequest;
 import com.training.fitflow.dto.trainee.request.TraineeCreateRequest;
 import com.training.fitflow.dto.trainee.request.TraineeUpdateRequest;
 import com.training.fitflow.dto.trainee.response.TraineeCreateResponse;
 import com.training.fitflow.dto.trainee.response.TraineeProfileResponse;
-import com.training.fitflow.dto.trainee.response.TraineeSummaryResponse;
 import com.training.fitflow.dto.trainee.response.TraineeUpdateResponse;
 import com.training.fitflow.dto.trainer.request.TraineeTrainersUpdateRequest;
 import com.training.fitflow.dto.trainer.response.TrainerSummaryResponse;
@@ -39,6 +39,17 @@ public class TraineeController {
     public ResponseEntity<List<TrainerSummaryResponse>> getUnassignedTrainers(@PathVariable("username") String username) {
         List<TrainerSummaryResponse> response = traineeService.getUnassignedTrainers(username);
         return ResponseEntity.ok().body(response);
+    }
+
+    @PatchMapping("/{username}/status")
+    public ResponseEntity<Void> updateStatus(@PathVariable("username") String username,
+                                             @Valid @RequestBody UserStatusUpdateRequest request) {
+        if (request.isActive()) {
+            traineeService.activate(username);
+        } else {
+            traineeService.deactivate(username);
+        }
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{username}")

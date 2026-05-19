@@ -1,5 +1,6 @@
 package com.training.fitflow.controller;
 
+import com.training.fitflow.dto.common.request.UserStatusUpdateRequest;
 import com.training.fitflow.dto.trainer.request.TrainerCreateRequest;
 import com.training.fitflow.dto.trainer.request.TrainerUpdateRequest;
 import com.training.fitflow.dto.trainer.response.TrainerCreateResponse;
@@ -28,6 +29,17 @@ public class TrainerController {
     public ResponseEntity<TrainerProfileResponse> getTrainerProfile(@PathVariable("username") String username) {
         TrainerProfileResponse response = trainerService.getByUsername(username);
         return ResponseEntity.ok().body(response);
+    }
+
+    @PatchMapping("/{username}/status")
+    public ResponseEntity<Void> updateStatus(@PathVariable("username") String username,
+                                             @Valid @RequestBody UserStatusUpdateRequest request) {
+        if (request.isActive()) {
+            trainerService.activate(username);
+        } else {
+            trainerService.deactivate(username);
+        }
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{username}")

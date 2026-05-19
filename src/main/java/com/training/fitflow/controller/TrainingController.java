@@ -4,6 +4,7 @@ import com.training.fitflow.dto.training.request.TrainingCreateRequest;
 import com.training.fitflow.service.TrainingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +17,6 @@ public class TrainingController {
     @PostMapping
     public ResponseEntity<Void> createTraining(@Valid @RequestBody TrainingCreateRequest request) {
         trainingService.create(request);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 }
