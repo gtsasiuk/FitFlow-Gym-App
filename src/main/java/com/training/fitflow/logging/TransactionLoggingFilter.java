@@ -29,6 +29,10 @@ public class TransactionLoggingFilter extends OncePerRequestFilter {
             log.info("Incoming request: method={} uri={}", request.getMethod(), request.getRequestURI());
 
             filterChain.doFilter(request, response);
+        } catch (Exception e) {
+            log.error("Unhandled exception during request processing: method={} uri={} error={}",
+                    request.getMethod(), request.getRequestURI(), e.getMessage());
+            throw e;
         } finally {
             long duration = System.currentTimeMillis() - start;
             log.info("Request completed: method={} uri={} status={} duration={}ms",
