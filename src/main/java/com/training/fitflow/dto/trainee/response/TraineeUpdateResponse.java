@@ -1,10 +1,12 @@
 package com.training.fitflow.dto.trainee.response;
 
 import com.training.fitflow.dto.trainer.response.TrainerSummaryResponse;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
 import java.util.List;
 
+@Schema(description = "Response after updating trainee profile")
 public record TraineeUpdateResponse(
         String username,
         String firstName,
@@ -13,5 +15,4 @@ public record TraineeUpdateResponse(
         String address,
         Boolean isActive,
         List<TrainerSummaryResponse> trainers
-) {
-}
+) {}
