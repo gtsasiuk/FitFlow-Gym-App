@@ -27,7 +27,8 @@ public class BasicAuthInterceptor implements HandlerInterceptor {
                              Object handler) throws Exception {
         String path = request.getRequestURI();
         String method = request.getMethod();
-
+        log.info("[AUTH-CHECK] Request to path: {}, method: {}, isPublic: {}",
+                path, method, isPublicEndpoint(path, method));
         if (isPublicEndpoint(path, method)) {
             return true;
         }
@@ -75,6 +76,10 @@ public class BasicAuthInterceptor implements HandlerInterceptor {
     }
 
     private boolean isPublicEndpoint(String path, String method) {
+        if (path.contains("/swagger-ui") || path.contains("/v3/api-docs")) {
+            return true;
+        }
+
         return (path.endsWith("/api/v1/trainees") && method.equals("POST"))
                 || (path.endsWith("/api/v1/trainers") && method.equals("POST"))
                 || (path.contains("/api/v1/auth/login") && method.equals("POST"));
