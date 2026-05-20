@@ -12,11 +12,13 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/trainers")
 @RequiredArgsConstructor
+@Validated
 public class TrainerController {
     private final TrainerService trainerService;
 
@@ -46,7 +48,7 @@ public class TrainerController {
     }
 
     @PutMapping("/{username}")
-    public ResponseEntity<TrainerUpdateResponse> getTrainerProfile(@PathVariable("username")
+    public ResponseEntity<TrainerUpdateResponse> updateTrainerProfile(@PathVariable("username")
                                                                    @NotBlank(message = "Username is required") String username,
                                                                    @Valid @RequestBody TrainerUpdateRequest request) {
         TrainerUpdateResponse response = trainerService.update(username, request);

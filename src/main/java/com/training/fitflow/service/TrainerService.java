@@ -5,6 +5,7 @@ import com.training.fitflow.dto.trainer.request.TrainerUpdateRequest;
 import com.training.fitflow.dto.trainer.response.TrainerCreateResponse;
 import com.training.fitflow.dto.trainer.response.TrainerProfileResponse;
 import com.training.fitflow.dto.trainer.response.TrainerUpdateResponse;
+import com.training.fitflow.exception.SpecializationNotFoundException;
 import com.training.fitflow.exception.TrainerNotFoundException;
 import com.training.fitflow.mapper.TrainerMapper;
 import com.training.fitflow.model.Trainer;
@@ -14,7 +15,6 @@ import com.training.fitflow.repository.TrainingTypeRepository;
 import com.training.fitflow.util.PasswordGenerator;
 import com.training.fitflow.util.UsernameGenerator;
 import com.training.fitflow.util.UserUpdateUtil;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +36,7 @@ public class TrainerService {
     public TrainerCreateResponse create(TrainerCreateRequest request) {
         log.info("Creating trainer: {} {}", request.firstName(), request.lastName());
         TrainingType specialization = trainingTypeRepository.findById(request.specializationId())
-                .orElseThrow(() -> new EntityNotFoundException("Training type not found"));
+                .orElseThrow(() -> new SpecializationNotFoundException("Training type not found"));
 
         Trainer trainer = trainerMapper.toEntity(request);
         trainer.setSpecialization(specialization);

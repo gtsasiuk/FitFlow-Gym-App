@@ -113,6 +113,14 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(ex.getMessage()));
     }
 
+    @ExceptionHandler(SpecializationNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleSpecializationNotFound(
+            SpecializationNotFoundException ex) {
+        log.warn("Training type not found: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(ex.getMessage()));
+    }
+
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<ErrorResponse> handleNoHandlerFound(
             NoHandlerFoundException ex) {
