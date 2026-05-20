@@ -6,10 +6,10 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 public record TraineeUpdateRequest(
-        @NotBlank String firstName,
-        @NotBlank String lastName,
+        @NotBlank(message = "First name is required") String firstName,
+        @NotBlank(message = "Last name is required") String lastName,
         LocalDate dateOfBirth,
         String address,
-        @NotNull Boolean isActive
+        @NotNull(message = "isActive must not be null") Boolean isActive
 ) {
 }
