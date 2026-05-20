@@ -1,5 +1,6 @@
 package com.training.fitflow.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.training.fitflow.security.BasicAuthInterceptor;
 import com.training.fitflow.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
     @Autowired
     private AuthService authService;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Bean
     public LocalValidatorFactoryBean validator() {
@@ -31,7 +34,7 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new BasicAuthInterceptor(authService))
+        registry.addInterceptor(new BasicAuthInterceptor(authService, objectMapper))
                 .addPathPatterns("/**");
     }
 }

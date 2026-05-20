@@ -1,5 +1,7 @@
 package com.training.fitflow.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.training.fitflow.dto.exception.response.ErrorResponse;
 import com.training.fitflow.exception.BadCredentialException;
 import com.training.fitflow.exception.UserDeactivatedException;
 import com.training.fitflow.service.AuthService;
@@ -9,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
@@ -16,6 +19,7 @@ import java.util.Base64;
 @RequiredArgsConstructor
 public class BasicAuthInterceptor implements HandlerInterceptor {
     private final AuthService authService;
+    private final ObjectMapper objectMapper;
 
     @Override
     public boolean preHandle(HttpServletRequest request,
@@ -47,17 +51,27 @@ public class BasicAuthInterceptor implements HandlerInterceptor {
 
         } catch (UserDeactivatedException e) {
             log.warn("User is deactivated: {}", e.getMessage());
-            response.sendError(HttpServletResponse.SC_FORBIDDEN, "User is deactivated");
+            sendError(response, HttpServletResponse.SC_FORBIDDEN, "User is deactivated");
             return false;
         } catch (BadCredentialException e) {
             log.warn("Authentication failed: {}", e.getMessage());
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid credentials");
+            sendError(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid credentials");
             return false;
         } catch (Exception e) {
             log.error("Unexpected auth error: {}", e.getMessage());
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Auth error");
+            sendError(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Auth error");
             return false;
         }
+    }
+
+    private void sendError(HttpServletResponse response, int status, String message)
+            throws IOException {
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(
+                objectMapper.writeValueAsString(new ErrorResponse(message))
+        );
     }
 
     private boolean isPublicEndpoint(String path, String method) {
