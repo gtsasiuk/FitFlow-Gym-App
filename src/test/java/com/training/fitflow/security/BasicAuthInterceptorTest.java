@@ -26,16 +26,12 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("BasicAuthInterceptor Tests")
 class BasicAuthInterceptorTest {
-
     @Mock
     private AuthService authService;
-
     @Mock
     private ObjectMapper objectMapper;
-
     @Mock
     private HttpServletRequest request;
-
     @Mock
     private HttpServletResponse response;
 

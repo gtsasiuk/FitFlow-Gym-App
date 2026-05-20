@@ -19,10 +19,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("TrainingTypeService Tests")
 class TrainingTypeServiceTest {
-
     @Mock
     private TrainingTypeRepository trainingTypeRepository;
-
     @Mock
     private TrainingTypeMapper trainingTypeMapper;
 

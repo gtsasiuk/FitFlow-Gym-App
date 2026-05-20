@@ -21,13 +21,10 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("TransactionLoggingFilter Tests")
 class TransactionLoggingFilterTest {
-
     @Mock
     private HttpServletRequest request;
-
     @Mock
     private HttpServletResponse response;
-
     @Mock
     private FilterChain filterChain;
 
