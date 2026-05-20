@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 @Schema(description = "Request to change user active status")
 public record UserStatusUpdateRequest(
-        @NotNull
+        @NotNull(message = "isActive must not be null")
         @Schema(example = "true", description = "Active status flag")
         Boolean isActive
 ) {}

@@ -8,8 +8,7 @@ import jakarta.validation.constraints.NotBlank;
         description = "DTO used for updating user password with old password verification"
 )
 public record ChangePasswordRequest(
-
-        @NotBlank
+        @NotBlank(message = "Username is required")
         @Schema(
                 description = "Username of the account",
                 example = "john.doe",
@@ -17,7 +16,7 @@ public record ChangePasswordRequest(
         )
         String username,
 
-        @NotBlank
+        @NotBlank(message = "Old password is required")
         @Schema(
                 description = "Current (old) password used for verification",
                 example = "OldPass123!",
@@ -26,7 +25,7 @@ public record ChangePasswordRequest(
         )
         String oldPassword,
 
-        @NotBlank
+        @NotBlank(message = "New password is required")
         @Schema(
                 description = "New password that will replace the old one",
                 example = "NewStrongPass456!",

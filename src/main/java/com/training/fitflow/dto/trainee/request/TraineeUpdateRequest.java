@@ -8,17 +8,17 @@ import java.time.LocalDate;
 
 @Schema(description = "Request object for updating trainee profile")
 public record TraineeUpdateRequest(
-        @NotBlank
+        @NotBlank(message = "First name is required")
         @Schema(example = "John")
         String firstName,
-        @NotBlank
+        @NotBlank(message = "Last name is required")
         @Schema(example = "Doe")
         String lastName,
         @Schema(example = "1995-05-20")
         LocalDate dateOfBirth,
         @Schema(example = "Kyiv, Ukraine")
         String address,
-        @NotNull
+        @NotNull(message = "isActive must not be null")
         @Schema(description = "Trainee active status", example = "true")
         Boolean isActive
 ) {}
