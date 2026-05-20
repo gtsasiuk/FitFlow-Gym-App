@@ -29,6 +29,7 @@ dependencies {
     implementation 'jakarta.annotation:jakarta.annotation-api:2.1.1'
     // Servlet API
     compileOnly 'jakarta.servlet:jakarta.servlet-api:6.1.0'
+    testImplementation 'jakarta.servlet:jakarta.servlet-api:6.1.0'
     // Validation
     implementation 'jakarta.validation:jakarta.validation-api:4.0.0-M1'
     implementation 'org.hibernate.validator:hibernate-validator:9.1.0.Final'

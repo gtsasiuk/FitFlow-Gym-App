@@ -34,19 +34,14 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("TrainerService Tests")
 class TrainerServiceTest {
-
     @Mock
     private TrainerRepository trainerRepository;
-
     @Mock
     private TrainingTypeRepository trainingTypeRepository;
-
     @Mock
     private TrainerMapper trainerMapper;
-
     @Mock
     private UsernameGenerator usernameGenerator;
-
     @Mock
     private PasswordGenerator passwordGenerator;
 
