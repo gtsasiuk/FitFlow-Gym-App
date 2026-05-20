@@ -44,7 +44,6 @@ public class Trainee extends User {
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
                 ", active=" + active + '\'' +
                 ", dateOfBirth=" + dateOfBirth + '\'' +
                 ", address='" + address + '\'' +

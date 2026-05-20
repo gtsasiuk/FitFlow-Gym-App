@@ -33,7 +33,6 @@ public class Trainer extends User {
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
                 ", active=" + active +
                 ", specializationId=" + (specialization != null ? specialization.getId() : null) +
                 '}';
