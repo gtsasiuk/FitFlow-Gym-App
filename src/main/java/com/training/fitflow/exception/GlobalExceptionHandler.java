@@ -1,7 +1,6 @@
 package com.training.fitflow.exception;
 
 import com.training.fitflow.dto.exception.response.ErrorResponse;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpStatus;
@@ -90,10 +89,26 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(ex.getMessage()));
     }
 
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleEntityNotFound(
-            EntityNotFoundException ex) {
-        log.warn("Entity not found: {}", ex.getMessage());
+    @ExceptionHandler(TraineeNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleTrainerNotFound(
+            TraineeNotFoundException ex) {
+        log.warn("Trainee not found: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(ex.getMessage()));
+    }
+
+    @ExceptionHandler(TrainerNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleTrainerNotFound(
+            TrainerNotFoundException ex) {
+        log.warn("Trainer not found: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(ex.getMessage()));
+    }
+
+    @ExceptionHandler(TrainingNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleTrainingNotFound(
+            TrainingNotFoundException ex) {
+        log.warn("Training not found: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(ex.getMessage()));
     }
