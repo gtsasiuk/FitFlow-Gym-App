@@ -5,10 +5,12 @@ import com.training.fitflow.dto.training.response.TraineeTrainingResponse;
 import com.training.fitflow.dto.training.response.TrainerTrainingResponse;
 import com.training.fitflow.service.TrainingService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -17,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/trainings")
 @RequiredArgsConstructor
+@Validated
 public class TrainingController {
     private final TrainingService trainingService;
 
@@ -28,7 +31,7 @@ public class TrainingController {
 
     @GetMapping("/trainee")
     public ResponseEntity<List<TraineeTrainingResponse>> getTraineeTrainings(
-            @RequestParam("username") String username,
+            @RequestParam("username") @NotBlank(message = "Username is required") String username,
             @RequestParam(name = "fromDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
             @RequestParam(name = "toDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
             @RequestParam(name = "trainerName", required = false) String trainerName,
@@ -41,7 +44,7 @@ public class TrainingController {
 
     @GetMapping("/trainer")
     public ResponseEntity<List<TrainerTrainingResponse>> getTrainerTrainings(
-            @RequestParam("username") String username,
+            @RequestParam("username") @NotBlank(message = "Username is required") String username,
             @RequestParam(name = "fromDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
             @RequestParam(name = "toDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
             @RequestParam(name = "traineeName", required = false) String traineeName

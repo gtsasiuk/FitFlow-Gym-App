@@ -8,6 +8,7 @@ import com.training.fitflow.dto.trainer.response.TrainerProfileResponse;
 import com.training.fitflow.dto.trainer.response.TrainerUpdateResponse;
 import com.training.fitflow.service.TrainerService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,13 +27,15 @@ public class TrainerController {
     }
 
     @GetMapping("/{username}")
-    public ResponseEntity<TrainerProfileResponse> getTrainerProfile(@PathVariable("username") String username) {
+    public ResponseEntity<TrainerProfileResponse> getTrainerProfile(@PathVariable("username")
+                                                                    @NotBlank(message = "Username is required") String username) {
         TrainerProfileResponse response = trainerService.getByUsername(username);
         return ResponseEntity.ok().body(response);
     }
 
     @PatchMapping("/{username}/status")
-    public ResponseEntity<Void> updateStatus(@PathVariable("username") String username,
+    public ResponseEntity<Void> updateStatus(@PathVariable("username")
+                                             @NotBlank(message = "Username is required") String username,
                                              @Valid @RequestBody UserStatusUpdateRequest request) {
         if (request.isActive()) {
             trainerService.activate(username);
@@ -43,7 +46,8 @@ public class TrainerController {
     }
 
     @PutMapping("/{username}")
-    public ResponseEntity<TrainerUpdateResponse> getTrainerProfile(@PathVariable("username") String username,
+    public ResponseEntity<TrainerUpdateResponse> getTrainerProfile(@PathVariable("username")
+                                                                   @NotBlank(message = "Username is required") String username,
                                                                    @Valid @RequestBody TrainerUpdateRequest request) {
         TrainerUpdateResponse response = trainerService.update(username, request);
         return ResponseEntity.ok().body(response);
