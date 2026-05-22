@@ -5,6 +5,7 @@ import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -24,6 +25,7 @@ import java.util.Properties;
 public class JpaConfig {
     @Bean
     public DataSource dataSource(
+            @Value("${database.driver}") String driver,
             @Value("${database.url}") String url,
             @Value("${database.username}") String username,
             @Value("${database.password}") String password
@@ -32,11 +34,13 @@ public class JpaConfig {
         dataSource.setJdbcUrl(url);
         dataSource.setUsername(username);
         dataSource.setPassword(password);
+        dataSource.setDriverClassName(driver);
         dataSource.setPoolName("FitFlowHikariCP");
         return dataSource;
     }
 
     @Bean
+    @DependsOn("flyway")
     public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource) {
         var em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(dataSource);
@@ -47,7 +51,7 @@ public class JpaConfig {
 
         Properties jpaProperties = new Properties();
         jpaProperties.setProperty("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
-        jpaProperties.setProperty("hibernate.hbm2ddl.auto", "update");
+        jpaProperties.setProperty("hibernate.hbm2ddl.auto", "validate");
         jpaProperties.setProperty("hibernate.show_sql", "true");
         em.setJpaProperties(jpaProperties);
 

@@ -11,16 +11,21 @@ import java.util.List;
 
 @Repository
 public interface TrainingRepository extends JpaRepository<Training, Long> {
-    @Query("""
-        SELECT t FROM Training t
-        WHERE t.trainee.username = :username
-        AND (:fromDate IS NULL OR t.date >= :fromDate)
-        AND (:toDate IS NULL OR t.date <= :toDate)
-        AND (:trainerName IS NULL OR :trainerName = '' OR
-            LOWER(t.trainer.firstName) LIKE LOWER(CONCAT('%', :trainerName, '%'))
-            OR LOWER(t.trainer.lastName) LIKE LOWER(CONCAT('%', :trainerName, '%')))
-        AND (:typeId IS NULL OR t.type.id = :typeId)
-    """)
+    @Query(value = """
+        SELECT t.* FROM trainings t
+        JOIN trainees tr ON tr.id = t.trainee_id
+        JOIN users u ON u.id = tr.id
+        JOIN trainers trn ON trn.id = t.trainer_id
+        JOIN users u2 ON u2.id = trn.id
+        WHERE u.username = :username
+        AND (CAST(:fromDate AS date) IS NULL OR t.training_date >= CAST(:fromDate AS date))
+        AND (CAST(:toDate AS date) IS NULL OR t.training_date <= CAST(:toDate AS date))
+        AND (CAST(:trainerName AS text) IS NULL OR (
+            LOWER(u2.first_name) LIKE LOWER(CONCAT('%', :trainerName, '%'))
+            OR LOWER(u2.last_name) LIKE LOWER(CONCAT('%', :trainerName, '%'))
+        ))
+        AND (CAST(:typeId AS bigint) IS NULL OR t.training_type_id = CAST(:typeId AS bigint))
+    """, nativeQuery = true)
     List<Training> findTraineeTrainings(
             @Param("username") String username,
             @Param("fromDate") LocalDate fromDate,
@@ -29,15 +34,20 @@ public interface TrainingRepository extends JpaRepository<Training, Long> {
             @Param("typeId") Long typeId
     );
 
-    @Query("""
-        SELECT t FROM Training t
-        WHERE t.trainer.username = :username
-        AND (:fromDate IS NULL OR t.date >= :fromDate)
-        AND (:toDate IS NULL OR t.date <= :toDate)
-        AND (:traineeName IS NULL OR :traineeName = '' OR
-            LOWER(t.trainee.firstName) LIKE LOWER(CONCAT('%', :traineeName, '%'))
-            OR LOWER(t.trainee.lastName) LIKE LOWER(CONCAT('%', :traineeName, '%')))
-    """)
+    @Query(value = """
+        SELECT t.* FROM trainings t
+        JOIN trainers trn ON trn.id = t.trainer_id
+        JOIN users u ON u.id = trn.id
+        JOIN trainees tr ON tr.id = t.trainee_id
+        JOIN users u2 ON u2.id = tr.id
+        WHERE u.username = :username
+        AND (CAST(:fromDate AS date) IS NULL OR t.training_date >= CAST(:fromDate AS date))
+        AND (CAST(:toDate AS date) IS NULL OR t.training_date <= CAST(:toDate AS date))
+        AND (CAST(:traineeName AS text) IS NULL OR (
+            LOWER(u2.first_name) LIKE LOWER(CONCAT('%', :traineeName, '%'))
+            OR LOWER(u2.last_name) LIKE LOWER(CONCAT('%', :traineeName, '%'))
+        ))
+    """, nativeQuery = true)
     List<Training> findTrainerTrainings(
             @Param("username") String username,
             @Param("fromDate") LocalDate fromDate,
