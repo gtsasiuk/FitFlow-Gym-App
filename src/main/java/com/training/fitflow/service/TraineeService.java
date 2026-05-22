@@ -16,7 +16,6 @@ import com.training.fitflow.repository.TraineeRepository;
 import com.training.fitflow.repository.TrainerRepository;
 import com.training.fitflow.util.PasswordGenerator;
 import com.training.fitflow.util.UsernameGenerator;
-import com.training.fitflow.util.UserUpdateUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -68,12 +67,11 @@ public class TraineeService {
                     return new TraineeNotFoundException(username);
                 });
 
-        UserUpdateUtil.updateNameFields(existingTrainee, request.firstName(), request.lastName(), usernameGenerator);
-
         existingTrainee.setFirstName(request.firstName());
         existingTrainee.setLastName(request.lastName());
         existingTrainee.setDateOfBirth(request.dateOfBirth());
         existingTrainee.setAddress(request.address());
+        existingTrainee.setActive(request.isActive());
 
         Trainee updated = traineeRepository.save(existingTrainee);
         log.info("Trainee updated successfully id={}", updated.getId());

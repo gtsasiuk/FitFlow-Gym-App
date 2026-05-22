@@ -118,24 +118,21 @@ class TraineeServiceTest {
                 "Smith",
                 LocalDate.of(1999, 5, 5),
                 "New address",
-                true
+                false
         );
 
         TraineeUpdateResponse response = new TraineeUpdateResponse(
-                "Jane.Smith",
+                "John.Doe",
                 "Jane",
                 "Smith",
                 LocalDate.of(1999, 5, 5),
                 "New address",
-                true,
+                false,
                 List.of()
         );
 
         when(traineeRepository.findByUsername("John.Doe"))
                 .thenReturn(Optional.of(trainee));
-
-        when(usernameGenerator.generate("Jane", "Smith"))
-                .thenReturn("Jane.Smith");
 
         when(traineeRepository.save(any(Trainee.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -143,13 +140,14 @@ class TraineeServiceTest {
         when(traineeMapper.toTraineeUpdateResponse(any(Trainee.class)))
                 .thenReturn(response);
 
-        TraineeUpdateResponse result =
-                service.update("John.Doe", request);
+        TraineeUpdateResponse result = service.update("John.Doe", request);
 
         assertNotNull(result);
         assertEquals("Jane", trainee.getFirstName());
         assertEquals("Smith", trainee.getLastName());
         assertEquals("New address", trainee.getAddress());
+        assertFalse(trainee.getActive());
+        assertEquals("John.Doe", trainee.getUsername());
 
         verify(traineeRepository).save(trainee);
     }

@@ -14,14 +14,12 @@ import com.training.fitflow.repository.TrainerRepository;
 import com.training.fitflow.repository.TrainingTypeRepository;
 import com.training.fitflow.util.PasswordGenerator;
 import com.training.fitflow.util.UsernameGenerator;
-import com.training.fitflow.util.UserUpdateUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -142,9 +140,6 @@ class TrainerServiceTest {
                 true
         );
 
-        TrainerProfileResponse response =
-                mock(TrainerProfileResponse.class);
-
         when(trainerRepository.findByUsername("John.Doe"))
                 .thenReturn(Optional.of(trainer));
 
@@ -154,24 +149,15 @@ class TrainerServiceTest {
         when(trainerMapper.toUpdateResponse(any(Trainer.class)))
                 .thenReturn(mock(TrainerUpdateResponse.class));
 
-        try (MockedStatic<UserUpdateUtil> mocked =
-                     mockStatic(UserUpdateUtil.class)) {
+        TrainerUpdateResponse result = service.update("John.Doe", request);
 
-            mocked.when(() ->
-                    UserUpdateUtil.updateNameFields(
-                            any(),
-                            anyString(),
-                            anyString(),
-                            any()
-                    )
-            ).thenAnswer(inv -> null);
+        assertNotNull(result);
+        assertEquals("Jane", trainer.getFirstName());
+        assertEquals("Smith", trainer.getLastName());
+        assertTrue(trainer.getActive());
+        assertEquals("John.Doe", trainer.getUsername()); // username не змінився
 
-            TrainerUpdateResponse result =
-                    service.update("John.Doe", request);
-
-            assertNotNull(result);
-            verify(trainerRepository).save(trainer);
-        }
+        verify(trainerRepository).save(trainer);
     }
 
     @Test
