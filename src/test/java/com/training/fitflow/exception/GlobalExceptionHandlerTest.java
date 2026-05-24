@@ -1,6 +1,9 @@
 package com.training.fitflow.exception;
 
 import com.training.fitflow.dto.exception.response.ErrorResponse;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +17,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -23,6 +27,25 @@ import static org.mockito.Mockito.*;
 class GlobalExceptionHandlerTest {
     @InjectMocks
     private GlobalExceptionHandler handler;
+
+    // ─── ConstraintViolationException ────────────────────────────────────────────
+
+    @Test
+    @DisplayName("handleConstraintViolation → returns 400 with violation message")
+    void handleConstraintViolation_returns400() {
+        ConstraintViolationException ex = mock(ConstraintViolationException.class);
+        ConstraintViolation<?> violation = mock(ConstraintViolation.class);
+
+        when(violation.getPropertyPath()).thenReturn(PathImpl.createPathFromString("updateStatus.username"));
+        when(violation.getMessage()).thenReturn("Username is required");
+        when(ex.getConstraintViolations()).thenReturn(Set.of(violation));
+
+        ResponseEntity<ErrorResponse> response = handler.handleConstraintViolation(ex);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().message().contains("Username is required"));
+    }
 
     // ─── BadCredentialException ───────────────────────────────────────────────
 
