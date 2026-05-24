@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 public class ActiveUsersHealthIndicator implements HealthIndicator {
-
     private final TrainerRepository trainerRepository;
     private final TraineeRepository traineeRepository;
 
