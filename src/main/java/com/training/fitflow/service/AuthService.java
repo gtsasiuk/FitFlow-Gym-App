@@ -6,6 +6,7 @@ import com.training.fitflow.model.Trainee;
 import com.training.fitflow.model.Trainer;
 import com.training.fitflow.repository.TraineeRepository;
 import com.training.fitflow.repository.TrainerRepository;
+import io.micrometer.core.instrument.Counter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,8 @@ import java.util.Optional;
 public class AuthService {
     private final TraineeRepository traineeRepository;
     private final TrainerRepository trainerRepository;
+    private final Counter loginSuccessCounter;
+    private final Counter loginFailureCounter;
 
     public void authenticate(String username, String password) {
         log.info("Authenticating user with username={}", username);
@@ -28,13 +31,16 @@ public class AuthService {
 
             if (!trainee.getPassword().equals(password)) {
                 log.warn("Invalid password for trainee username={}", username);
+                loginFailureCounter.increment();
                 throw new BadCredentialException(username);
             }
 
             if (!trainee.getActive()) {
+                loginFailureCounter.increment();
                 throw new UserDeactivatedException(username);
             }
             log.info("Authenticating trainee with username={}", username);
+            loginSuccessCounter.increment();
             return;
         }
 
@@ -45,13 +51,16 @@ public class AuthService {
 
             if (!trainer.getPassword().equals(password)) {
                 log.warn("Invalid password for trainer username={}", username);
+                loginFailureCounter.increment();
                 throw new BadCredentialException(username);
             }
 
             if (!trainer.getActive()) {
+                loginFailureCounter.increment();
                 throw new UserDeactivatedException(username);
             }
             log.info("Authenticating trainer with username={}", username);
+            loginSuccessCounter.increment();
             return;
         }
 
