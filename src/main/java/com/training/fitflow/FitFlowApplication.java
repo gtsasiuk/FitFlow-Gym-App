@@ -1,15 +1,15 @@
 package com.training.fitflow;
 
-import com.training.fitflow.config.AppConfig;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@SpringBootApplication
 @Slf4j
 public class FitFlowApplication {
     public static void main(String[] args) {
         log.info("Starting FitFlow application...");
-        ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+        SpringApplication.run(FitFlowApplication.class, args);
 
         log.info("Application finished execution");
     }
