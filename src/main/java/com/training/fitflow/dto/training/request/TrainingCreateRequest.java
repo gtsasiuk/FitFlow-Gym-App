@@ -1,0 +1,29 @@
+package com.training.fitflow.dto.training.request;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
+import java.time.LocalDate;
+
+@Schema(description = "Request for creating a new training session")
+public record TrainingCreateRequest(
+        @NotBlank(message = "Trainee username is required")
+        @Schema(example = "john.trainee")
+        String traineeUsername,
+        @NotBlank(message = "Trainer username is required")
+        @Schema(example = "john.trainer")
+        String trainerUsername,
+        @NotBlank(message = "Training name is required")
+        @Schema(example = "Strength Training")
+        String trainingName,
+        @NotNull(message = "Training date is required")
+        @Schema(example = "2025-05-20")
+        LocalDate trainingDate,
+        @NotNull(message = "Training duration is required")
+        @Positive(message = "Training duration must be positive")
+        @Schema(example = "60")
+        Integer trainingDuration
+) {
+}

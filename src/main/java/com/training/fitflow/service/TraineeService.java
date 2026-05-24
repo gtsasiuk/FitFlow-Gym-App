@@ -1,14 +1,21 @@
 package com.training.fitflow.service;
 
+import com.training.fitflow.dto.trainee.request.TraineeCreateRequest;
+import com.training.fitflow.dto.trainee.request.TraineeUpdateRequest;
+import com.training.fitflow.dto.trainee.response.TraineeCreateResponse;
+import com.training.fitflow.dto.trainee.response.TraineeProfileResponse;
+import com.training.fitflow.dto.trainee.response.TraineeUpdateResponse;
+import com.training.fitflow.dto.trainer.request.TraineeTrainersUpdateRequest;
+import com.training.fitflow.dto.trainer.response.TrainerSummaryResponse;
 import com.training.fitflow.exception.TraineeNotFoundException;
+import com.training.fitflow.mapper.TraineeMapper;
+import com.training.fitflow.mapper.TrainerMapper;
 import com.training.fitflow.model.Trainee;
 import com.training.fitflow.model.Trainer;
 import com.training.fitflow.repository.TraineeRepository;
 import com.training.fitflow.repository.TrainerRepository;
 import com.training.fitflow.util.PasswordGenerator;
 import com.training.fitflow.util.UsernameGenerator;
-import com.training.fitflow.util.UserUpdateUtil;
-import com.training.fitflow.util.ValidationUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,38 +31,16 @@ import java.util.Set;
 public class TraineeService {
     private final TraineeRepository traineeRepository;
     private final TrainerRepository trainerRepository;
+    private final TraineeMapper traineeMapper;
     private final UsernameGenerator usernameGenerator;
     private final PasswordGenerator passwordGenerator;
-
-    private void validateTraineeForCreate(Trainee trainee) {
-        ValidationUtil.notNull(trainee, "Trainee");
-
-        ValidationUtil.notBlank(trainee.getFirstName(), "First name");
-        ValidationUtil.notBlank(trainee.getLastName(), "Last name");
-    }
-
-    private void validateTraineeForUpdate(Trainee trainee) {
-        ValidationUtil.notNull(trainee.getId(), "Trainee ID");
-
-        ValidationUtil.notBlank(trainee.getFirstName(), "First name");
-        ValidationUtil.notBlank(trainee.getLastName(), "Last name");
-    }
-
-    private void validateTraineeForNewPassword(String username, String newPassword) {
-        ValidationUtil.notBlank(username, "Username");
-        ValidationUtil.notBlank(newPassword, "New password");
-    }
-
-    private void validateTraineeForTrainersUpdate(String username, List<Long> trainerIds) {
-        ValidationUtil.notBlank(username, "Username");
-        ValidationUtil.notNull(trainerIds, "Trainer IDs list");
-    }
+    private final TrainerMapper trainerMapper;
 
     @Transactional
-    public Trainee create(Trainee trainee) {
-        log.info("Creating trainee: {} {}", trainee.getFirstName(), trainee.getLastName());
+    public TraineeCreateResponse create(TraineeCreateRequest request) {
+        log.info("Creating trainee: {} {}", request.firstName(), request.lastName());
 
-        validateTraineeForCreate(trainee);
+        Trainee trainee = traineeMapper.toEntity(request);
 
         String username = usernameGenerator.generate(trainee.getFirstName(), trainee.getLastName());
         String password = passwordGenerator.generate();
@@ -69,46 +54,29 @@ public class TraineeService {
         Trainee saved = traineeRepository.save(trainee);
         log.info("Trainee created successfully with id={}", saved.getId());
 
-        return saved;
+        return traineeMapper.toTraineeCreateResponse(saved);
     }
 
     @Transactional
-    public Trainee update(Trainee trainee) {
-        log.info("Updating trainee with id={}", trainee.getId());
+    public TraineeUpdateResponse update(String username, TraineeUpdateRequest request) {
+        log.info("Updating trainee with username={}", username);
 
-        validateTraineeForUpdate(trainee);
-
-        Trainee existingTrainee = traineeRepository.findById(trainee.getId())
+        Trainee existingTrainee = traineeRepository.findByUsername(username)
                 .orElseThrow(() -> {
-                    log.warn("Trainee not found id={}", trainee.getId());
-                    return new TraineeNotFoundException(trainee.getUsername());
+                    log.warn("Trainee not found username={}", username);
+                    return new TraineeNotFoundException(username);
                 });
 
-        UserUpdateUtil.updateNameFields(existingTrainee, trainee.getFirstName(), trainee.getLastName(), usernameGenerator);
-
-        existingTrainee.setAddress(trainee.getAddress());
-        existingTrainee.setDateOfBirth(trainee.getDateOfBirth());
+        existingTrainee.setFirstName(request.firstName());
+        existingTrainee.setLastName(request.lastName());
+        existingTrainee.setDateOfBirth(request.dateOfBirth());
+        existingTrainee.setAddress(request.address());
+        existingTrainee.setActive(request.isActive());
 
         Trainee updated = traineeRepository.save(existingTrainee);
-
         log.info("Trainee updated successfully id={}", updated.getId());
 
-        return updated;
-    }
-
-    @Transactional
-    public void changePassword(String username, String newPassword) {
-        validateTraineeForNewPassword(username, newPassword);
-        log.info("Changing password for trainee username={}", username);
-
-        Trainee trainee = traineeRepository.findByUsername(username)
-                .orElseThrow(() -> new TraineeNotFoundException(username));
-
-        trainee.setPassword(newPassword);
-
-        traineeRepository.save(trainee);
-
-        log.info("Password changed successfully for username={}", username);
+        return traineeMapper.toTraineeUpdateResponse(updated);
     }
 
     @Transactional
@@ -145,20 +113,20 @@ public class TraineeService {
         log.info("Trainee deactivated username={}", username);
     }
 
-    public Trainee getByUsername(String username) {
+    @Transactional
+    public TraineeProfileResponse getByUsername(String username) {
         log.debug("Fetching trainee by username={}", username);
-
-        return traineeRepository.findByUsername(username)
+        Trainee trainee = traineeRepository.findByUsername(username)
                 .orElseThrow(() -> {
                     log.warn("Trainee not found username={}", username);
                     return new TraineeNotFoundException(username);
                 });
+        return traineeMapper.toProfileResponse(trainee);
     }
 
     @Transactional
-    public void updateTraineeTrainers(String username, List<Long> trainerIds) {
-        validateTraineeForTrainersUpdate(username, trainerIds);
-        log.info("Updating trainee trainers list username={}, trainerIds={}", username, trainerIds);
+    public List<TrainerSummaryResponse> updateTraineeTrainers(String username, TraineeTrainersUpdateRequest request) {
+        log.info("Updating trainee trainers list username={}, trainerUsernames={}", username, request.trainerUsernames());
 
         Trainee trainee = traineeRepository.findByUsername(username)
                 .orElseThrow(() -> {
@@ -167,27 +135,37 @@ public class TraineeService {
                 });
 
         Set<Trainer> newTrainers = new HashSet<>(
-                trainerRepository.findAllById(trainerIds)
+                trainerRepository.findAllByUsernameIn(request.trainerUsernames())
         );
 
         log.debug("Fetched trainers for assignment username={}, found={}/{}",
-                username, newTrainers.size(), trainerIds.size());
+                username, newTrainers.size(), request.trainerUsernames().size());
 
         int beforeSize = trainee.getTrainers() != null ? trainee.getTrainers().size() : 0;
 
         trainee.getTrainers().clear();
         trainee.getTrainers().addAll(newTrainers);
 
+        traineeRepository.save(trainee);
+
+        List<TrainerSummaryResponse> response = trainerMapper.toSummaryResponseList(newTrainers);
+
         log.info("Trainee trainers updated successfully username={}, beforeCount={}, afterCount={}",
                 username, beforeSize, newTrainers.size());
+
+        return response;
     }
 
-    public List<Trainer> getUnassignedTrainers(String username) {
+    @Transactional
+    public List<TrainerSummaryResponse> getUnassignedTrainers(String username) {
         log.debug("Fetching all unassigned trainers for trainee by username={}", username);
         Trainee trainee = traineeRepository.findByUsername(username)
                 .orElseThrow(() -> new TraineeNotFoundException(username));
 
-        return trainerRepository.findNotAssignedToTrainee(trainee.getUsername());
+        return trainerRepository.findNotAssignedToTrainee(trainee.getUsername())
+                .stream()
+                .map(trainerMapper::toSummaryResponse)
+                .toList();
     }
 
     public List<Trainee> getAll() {
@@ -198,6 +176,13 @@ public class TraineeService {
     @Transactional
     public void deleteByUsername(String username) {
         log.info("Deleting trainee username={}", username);
-        traineeRepository.deleteByUsername(username);
+        Trainee trainee = traineeRepository.findByUsername(username)
+                .orElseThrow(() -> new TraineeNotFoundException(username));
+
+        trainee.getTrainers().clear();
+        traineeRepository.save(trainee);
+
+        traineeRepository.delete(trainee);
+        log.info("Trainee deleted username={}", username);
     }
 }

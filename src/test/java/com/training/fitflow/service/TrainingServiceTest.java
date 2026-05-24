@@ -1,8 +1,12 @@
 package com.training.fitflow.service;
 
+import com.training.fitflow.dto.training.request.TrainingCreateRequest;
+import com.training.fitflow.dto.training.response.TraineeTrainingResponse;
+import com.training.fitflow.dto.training.response.TrainerTrainingResponse;
 import com.training.fitflow.exception.TraineeNotFoundException;
 import com.training.fitflow.exception.TrainerNotFoundException;
 import com.training.fitflow.exception.TrainingNotFoundException;
+import com.training.fitflow.mapper.TrainingMapper;
 import com.training.fitflow.model.Trainee;
 import com.training.fitflow.model.Trainer;
 import com.training.fitflow.model.Training;
@@ -14,7 +18,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
@@ -22,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,6 +39,8 @@ class TrainingServiceTest {
     private TrainerRepository trainerRepository;
     @Mock
     private TrainingRepository trainingRepository;
+    @Mock
+    private TrainingMapper trainingMapper;
 
     @InjectMocks
     private TrainingService service;
@@ -40,6 +48,7 @@ class TrainingServiceTest {
     private Trainee trainee;
     private Trainer trainer;
     private Training training;
+    private TrainingType type;
 
     @BeforeEach
     void setUp() {
@@ -51,38 +60,70 @@ class TrainingServiceTest {
         trainer.setId(20L);
         trainer.setUsername("trainer.one");
 
-        TrainingType type = new TrainingType(1L, "Fitness");
+        type = new TrainingType();
+        type.setId(1L);
+        type.setName("Fitness");
+
+        trainer.setSpecialization(type);
 
         training = new Training();
         training.setId(1L);
-        training.setTrainee(trainee);
-        training.setTrainer(trainer);
         training.setName("Morning Workout");
-        training.setType(type);
         training.setDate(LocalDate.of(2024, 1, 1));
         training.setDuration(60);
+        training.setTrainer(trainer);
+        training.setTrainee(trainee);
+        training.setType(type);
     }
+
+    // ---------------- CREATE ----------------
 
     @Test
     @DisplayName("Create → should save training when valid")
     void create_shouldSaveTraining_whenValid() {
-        when(trainerRepository.findById(20L)).thenReturn(Optional.of(trainer));
-        when(traineeRepository.findById(10L)).thenReturn(Optional.of(trainee));
-        when(trainingRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        TrainingCreateRequest request = new TrainingCreateRequest(
+                "john.doe",
+                "trainer.one",
+                "Morning Workout",
+                LocalDate.of(2024, 1, 1),
+                60
+        );
 
-        Training result = service.create(training);
+        when(trainingMapper.toEntity(request)).thenReturn(training);
+        when(trainerRepository.findByUsername("trainer.one"))
+                .thenReturn(Optional.of(trainer));
+        when(traineeRepository.findByUsername("john.doe"))
+                .thenReturn(Optional.of(trainee));
+        when(trainingRepository.save(any(Training.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
 
-        assertEquals("Morning Workout", result.getName());
+        service.create(request);
+
         verify(trainingRepository).save(training);
+        assertEquals(trainer, training.getTrainer());
+        assertEquals(trainee, training.getTrainee());
+        assertEquals(type, training.getType());
     }
 
     @Test
     @DisplayName("Create → should throw when trainer not found")
     void create_shouldThrow_whenTrainerNotFound() {
-        when(trainerRepository.findById(20L)).thenReturn(Optional.empty());
+        TrainingCreateRequest request = new TrainingCreateRequest(
+                "john.doe",
+                "trainer.one",
+                "Workout",
+                LocalDate.now(),
+                60
+        );
 
-        assertThrows(TrainerNotFoundException.class,
-                () -> service.create(training));
+        when(trainingMapper.toEntity(request)).thenReturn(training);
+        when(trainerRepository.findByUsername("trainer.one"))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                TrainerNotFoundException.class,
+                () -> service.create(request)
+        );
 
         verify(trainingRepository, never()).save(any());
     }
@@ -90,11 +131,24 @@ class TrainingServiceTest {
     @Test
     @DisplayName("Create → should throw when trainee not found")
     void create_shouldThrow_whenTraineeNotFound() {
-        when(trainerRepository.findById(20L)).thenReturn(Optional.of(trainer));
-        when(traineeRepository.findById(10L)).thenReturn(Optional.empty());
+        TrainingCreateRequest request = new TrainingCreateRequest(
+                "john.doe",
+                "trainer.one",
+                "Workout",
+                LocalDate.now(),
+                60
+        );
 
-        assertThrows(TraineeNotFoundException.class,
-                () -> service.create(training));
+        when(trainingMapper.toEntity(request)).thenReturn(training);
+        when(trainerRepository.findByUsername("trainer.one"))
+                .thenReturn(Optional.of(trainer));
+        when(traineeRepository.findByUsername("john.doe"))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                TraineeNotFoundException.class,
+                () -> service.create(request)
+        );
 
         verify(trainingRepository, never()).save(any());
     }
@@ -104,7 +158,8 @@ class TrainingServiceTest {
     @Test
     @DisplayName("GetById → should return training")
     void getById_shouldReturnTraining() {
-        when(trainingRepository.findById(1L)).thenReturn(Optional.of(training));
+        when(trainingRepository.findById(1L))
+                .thenReturn(Optional.of(training));
 
         Training result = service.getById(1L);
 
@@ -114,35 +169,52 @@ class TrainingServiceTest {
     @Test
     @DisplayName("GetById → should throw when not found")
     void getById_shouldThrow() {
-        when(trainingRepository.findById(1L)).thenReturn(Optional.empty());
+        when(trainingRepository.findById(1L))
+                .thenReturn(Optional.empty());
 
-        assertThrows(TrainingNotFoundException.class,
-                () -> service.getById(1L));
+        assertThrows(
+                TrainingNotFoundException.class,
+                () -> service.getById(1L)
+        );
     }
+
+    // ---------------- GET ALL ----------------
 
     @Test
     @DisplayName("GetAll → should return list")
     void getAll_shouldReturnList() {
-        when(trainingRepository.findAll()).thenReturn(List.of(training));
+        when(trainingRepository.findAll())
+                .thenReturn(List.of(training));
 
         List<Training> result = service.getAll();
 
         assertEquals(1, result.size());
+        verify(trainingRepository).findAll();
     }
 
+    // ---------------- TRAINEE TRAININGS ----------------
+
     @Test
-    @DisplayName("getTraineeTrainings → should return list when trainee exists")
+    @DisplayName("getTraineeTrainings → should return list")
     void getTraineeTrainings_shouldReturnList() {
+        TraineeTrainingResponse response = mock(TraineeTrainingResponse.class);
+
         when(traineeRepository.findByUsername("john.doe"))
                 .thenReturn(Optional.of(trainee));
 
         when(trainingRepository.findTraineeTrainings(
-                any(), any(), any(), any(), any()
+                eq("john.doe"),
+                any(),
+                any(),
+                isNull(),
+                isNull()
         )).thenReturn(List.of(training));
 
-        List<Training> result = service.getTraineeTrainings(
-                "john.doe", null, null, null, null
-        );
+        when(trainingMapper.toTraineeTrainingResponse(training))
+                .thenReturn(response);
+
+        List<TraineeTrainingResponse> result =
+                service.getTraineeTrainings("john.doe", null, null, null, null);
 
         assertEquals(1, result.size());
     }
@@ -153,25 +225,34 @@ class TrainingServiceTest {
         when(traineeRepository.findByUsername("john.doe"))
                 .thenReturn(Optional.empty());
 
-        assertThrows(TraineeNotFoundException.class,
-                () -> service.getTraineeTrainings(
-                        "john.doe", null, null, null, null
-                ));
+        assertThrows(
+                TraineeNotFoundException.class,
+                () -> service.getTraineeTrainings("john.doe", null, null, null, null)
+        );
     }
 
+    // ---------------- TRAINER TRAININGS ----------------
+
     @Test
-    @DisplayName("getTrainerTrainings → should return list when trainer exists")
+    @DisplayName("getTrainerTrainings → should return list")
     void getTrainerTrainings_shouldReturnList() {
+        TrainerTrainingResponse response = mock(TrainerTrainingResponse.class);
+
         when(trainerRepository.findByUsername("trainer.one"))
                 .thenReturn(Optional.of(trainer));
 
         when(trainingRepository.findTrainerTrainings(
-                any(), any(), any(), any()
+                eq("trainer.one"),
+                any(),
+                any(),
+                isNull()
         )).thenReturn(List.of(training));
 
-        List<Training> result = service.getTrainerTrainings(
-                "trainer.one", null, null, null
-        );
+        when(trainingMapper.toTrainerTrainingResponse(training))
+                .thenReturn(response);
+
+        List<TrainerTrainingResponse> result =
+                service.getTrainerTrainings("trainer.one", null, null, null);
 
         assertEquals(1, result.size());
     }
@@ -182,21 +263,9 @@ class TrainingServiceTest {
         when(trainerRepository.findByUsername("trainer.one"))
                 .thenReturn(Optional.empty());
 
-        assertThrows(TrainerNotFoundException.class,
-                () -> service.getTrainerTrainings(
-                        "trainer.one", null, null, null
-                ));
-    }
-
-    @Test
-    @DisplayName("toString → should contain key fields")
-    void toString_shouldContainFields() {
-        String result = training.toString();
-
-        assertAll(
-                () -> assertTrue(result.contains("Morning Workout")),
-                () -> assertTrue(result.contains("60")),
-                () -> assertTrue(result.contains("1"))
+        assertThrows(
+                TrainerNotFoundException.class,
+                () -> service.getTrainerTrainings("trainer.one", null, null, null)
         );
     }
 }

@@ -1,12 +1,19 @@
 package com.training.fitflow.service;
 
+import com.training.fitflow.dto.trainer.request.TrainerCreateRequest;
+import com.training.fitflow.dto.trainer.request.TrainerUpdateRequest;
+import com.training.fitflow.dto.trainer.response.TrainerCreateResponse;
+import com.training.fitflow.dto.trainer.response.TrainerProfileResponse;
+import com.training.fitflow.dto.trainer.response.TrainerUpdateResponse;
+import com.training.fitflow.exception.SpecializationNotFoundException;
 import com.training.fitflow.exception.TrainerNotFoundException;
+import com.training.fitflow.mapper.TrainerMapper;
 import com.training.fitflow.model.Trainer;
+import com.training.fitflow.model.TrainingType;
 import com.training.fitflow.repository.TrainerRepository;
+import com.training.fitflow.repository.TrainingTypeRepository;
 import com.training.fitflow.util.PasswordGenerator;
 import com.training.fitflow.util.UsernameGenerator;
-import com.training.fitflow.util.UserUpdateUtil;
-import com.training.fitflow.util.ValidationUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,38 +25,20 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class TrainerService {
-    private final TrainerRepository repository;
+    private final TrainerRepository trainerRepository;
+    private final TrainingTypeRepository trainingTypeRepository;
+    private final TrainerMapper trainerMapper;
     private final UsernameGenerator usernameGenerator;
     private final PasswordGenerator passwordGenerator;
 
-    private void validateTrainerForCreate(Trainer trainer) {
-        ValidationUtil.notNull(trainer, "Trainer");
-
-        ValidationUtil.notBlank(trainer.getFirstName(), "First name");
-        ValidationUtil.notBlank(trainer.getLastName(), "Last name");
-
-        ValidationUtil.notNull(trainer.getSpecialization(), "Specialization");
-    }
-
-    private void validateTrainerForUpdate(Trainer trainer) {
-        ValidationUtil.notNull(trainer.getId(), "Trainer ID");
-
-        ValidationUtil.notBlank(trainer.getFirstName(), "First name");
-        ValidationUtil.notBlank(trainer.getLastName(), "Last name");
-
-        ValidationUtil.notNull(trainer.getSpecialization(), "Specialization");
-    }
-
-    private void validateTrainerForNewPassword(String username, String newPassword) {
-        ValidationUtil.notBlank(username, "Username");
-        ValidationUtil.notBlank(newPassword, "New password");
-    }
-
     @Transactional
-    public Trainer create(Trainer trainer) {
-        log.info("Creating trainer: {} {}", trainer.getFirstName(), trainer.getLastName());
+    public TrainerCreateResponse create(TrainerCreateRequest request) {
+        log.info("Creating trainer: {} {}", request.firstName(), request.lastName());
+        TrainingType specialization = trainingTypeRepository.findById(request.specializationId())
+                .orElseThrow(() -> new SpecializationNotFoundException("Training type not found"));
 
-        validateTrainerForCreate(trainer);
+        Trainer trainer = trainerMapper.toEntity(request);
+        trainer.setSpecialization(specialization);
 
         String username = usernameGenerator.generate(trainer.getFirstName(), trainer.getLastName());
         String password = passwordGenerator.generate();
@@ -60,55 +49,37 @@ public class TrainerService {
         trainer.setPassword(password);
         trainer.setActive(true);
 
-        Trainer saved = repository.save(trainer);
-
+        Trainer saved = trainerRepository.save(trainer);
         log.info("Trainer created successfully with id={}", saved.getId());
 
-        return saved;
+        return trainerMapper.toCreateResponse(saved);
     }
 
     @Transactional
-    public Trainer update(Trainer trainer) {
-        log.info("Updating trainer id={}", trainer.getId());
+    public TrainerUpdateResponse update(String username, TrainerUpdateRequest request) {
+        log.info("Updating trainer with username={}", username);
 
-        validateTrainerForUpdate(trainer);
-
-        Trainer existingTrainer = repository.findById(trainer.getId())
+        Trainer existingTrainer = trainerRepository.findByUsername(username)
                 .orElseThrow(() -> {
-                    log.warn("Trainer not found id={}", trainer.getId());
-                    return new TrainerNotFoundException(trainer.getUsername());
+                    log.warn("Trainer not found username={}", username);
+                    return new TrainerNotFoundException(username);
                 });
 
-        UserUpdateUtil.updateNameFields(existingTrainer, trainer.getFirstName(), trainer.getLastName(), usernameGenerator);
-        existingTrainer.setSpecialization(trainer.getSpecialization());
+        existingTrainer.setFirstName(request.firstName());
+        existingTrainer.setLastName(request.lastName());
+        existingTrainer.setActive(request.isActive());
 
-        Trainer updated = repository.save(existingTrainer);
-
+        Trainer updated = trainerRepository.save(existingTrainer);
         log.info("Trainer updated successfully id={}", updated.getId());
 
-        return updated;
-    }
-
-    @Transactional
-    public void changePassword(String username, String newPassword) {
-        validateTrainerForNewPassword(username, newPassword);
-        log.info("Changing password for trainer username={}", username);
-
-        Trainer trainer = repository.findByUsername(username)
-                .orElseThrow(() -> new TrainerNotFoundException(username));
-
-        trainer.setPassword(newPassword);
-
-        repository.save(trainer);
-
-        log.info("Password changed successfully for username={}", username);
+        return trainerMapper.toUpdateResponse(updated);
     }
 
     @Transactional
     public void activate(String username) {
         log.info("Activating trainer username={}", username);
 
-        Trainer trainer = repository.findByUsername(username)
+        Trainer trainer = trainerRepository.findByUsername(username)
                 .orElseThrow(() -> new TrainerNotFoundException(username));
 
         if (trainer.getActive()) {
@@ -116,7 +87,7 @@ public class TrainerService {
         }
 
         trainer.setActive(true);
-        repository.save(trainer);
+        trainerRepository.save(trainer);
 
         log.info("Trainer activated username={}", username);
     }
@@ -125,7 +96,7 @@ public class TrainerService {
     public void deactivate(String username) {
         log.info("Deactivating trainer username={}", username);
 
-        Trainer trainer = repository.findByUsername(username)
+        Trainer trainer = trainerRepository.findByUsername(username)
                 .orElseThrow(() -> new TrainerNotFoundException(username));
 
         if (!trainer.getActive()) {
@@ -133,22 +104,24 @@ public class TrainerService {
         }
 
         trainer.setActive(false);
-        repository.save(trainer);
+        trainerRepository.save(trainer);
 
         log.info("Trainer deactivated username={}", username);
     }
 
-    public Trainer getByUsername(String username) {
+    @Transactional
+    public TrainerProfileResponse getByUsername(String username) {
         log.debug("Fetching trainer by username={}", username);
-        return repository.findByUsername(username)
+        Trainer trainer = trainerRepository.findByUsername(username)
                 .orElseThrow(() -> {
                     log.warn("Trainer not found username={}", username);
                     return new TrainerNotFoundException(username);
                 });
+        return trainerMapper.toProfileResponse(trainer);
     }
 
     public List<Trainer> getAll() {
         log.debug("Fetching all trainers");
-        return repository.findAll();
+        return trainerRepository.findAll();
     }
 }
