@@ -11,7 +11,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -32,7 +31,6 @@ class AuthServiceTest {
     @Mock
     private Counter loginFailureCounter;
 
-    @InjectMocks
     private AuthService authService;
 
     private Trainee trainee;
@@ -40,6 +38,8 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
+        authService = new AuthService(traineeRepository, trainerRepository, loginSuccessCounter, loginFailureCounter);
+
         trainee = new Trainee();
         trainee.setId(1L);
         trainee.setUsername("john.trainee");

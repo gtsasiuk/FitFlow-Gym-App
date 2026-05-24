@@ -22,7 +22,8 @@ public class TrainingTypesHealthIndicator implements HealthIndicator {
             log.debug("Health check: training types count={}", count);
 
             if (count < MIN_EXPECTED_TYPES) {
-                log.error("Health check failed: no training types in DB, system cannot create trainers");
+                log.error("Health check failed: not enough training types in DB. Found={}, expected at least={}",
+                        count, MIN_EXPECTED_TYPES);
                 return Health.down()
                         .withDetail("reason", "No training types found - reference data is missing")
                         .withDetail("count", count)
