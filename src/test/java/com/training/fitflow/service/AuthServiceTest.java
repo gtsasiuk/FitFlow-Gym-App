@@ -1,15 +1,16 @@
 package com.training.fitflow.service;
 
-import com.training.fitflow.exception.*;
+import com.training.fitflow.exception.BadCredentialException;
+import com.training.fitflow.exception.UserDeactivatedException;
 import com.training.fitflow.model.Trainee;
 import com.training.fitflow.model.Trainer;
 import com.training.fitflow.repository.TraineeRepository;
 import com.training.fitflow.repository.TrainerRepository;
+import io.micrometer.core.instrument.Counter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -25,8 +26,11 @@ class AuthServiceTest {
     private TraineeRepository traineeRepository;
     @Mock
     private TrainerRepository trainerRepository;
+    @Mock
+    private Counter loginSuccessCounter;
+    @Mock
+    private Counter loginFailureCounter;
 
-    @InjectMocks
     private AuthService authService;
 
     private Trainee trainee;
@@ -34,6 +38,8 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
+        authService = new AuthService(traineeRepository, trainerRepository, loginSuccessCounter, loginFailureCounter);
+
         trainee = new Trainee();
         trainee.setId(1L);
         trainee.setUsername("john.trainee");
@@ -47,100 +53,115 @@ class AuthServiceTest {
         trainer.setActive(true);
     }
 
-    // ─── authenticate ────
+    // ───────────────── authenticate ─────────────────
 
     @Test
     @DisplayName("authenticate → trainee valid credentials → success")
     void authenticate_trainee_validCredentials_success() {
-        when(traineeRepository.findByUsername("john.trainee"))
-                .thenReturn(Optional.of(trainee));
+        when(traineeRepository.findByUsername("john.trainee")).thenReturn(Optional.of(trainee));
 
         assertDoesNotThrow(() -> authService.authenticate("john.trainee", "pass123"));
 
         verify(traineeRepository).findByUsername("john.trainee");
         verifyNoInteractions(trainerRepository);
+
+        verify(loginSuccessCounter).increment();
+        verify(loginFailureCounter, never()).increment();
     }
 
     @Test
     @DisplayName("authenticate → trainee wrong password → BadCredentialException")
     void authenticate_trainee_wrongPassword_throwsBadCredential() {
-        when(traineeRepository.findByUsername("john.trainee"))
-                .thenReturn(Optional.of(trainee));
+        when(traineeRepository.findByUsername("john.trainee")).thenReturn(Optional.of(trainee));
 
         assertThrows(BadCredentialException.class,
-                () -> authService.authenticate("john.trainee", "wrong"));
+                () -> authService.authenticate("john.trainee", "wrong")
+        );
 
-        verify(traineeRepository).findByUsername("john.trainee");
+        verify(loginFailureCounter).increment();
+        verify(loginSuccessCounter, never()).increment();
     }
 
     @Test
     @DisplayName("authenticate → trainee inactive → UserDeactivatedException")
     void authenticate_trainee_inactive_throwsUserDeactivated() {
         trainee.setActive(false);
-        when(traineeRepository.findByUsername("john.trainee"))
-                .thenReturn(Optional.of(trainee));
+
+        when(traineeRepository.findByUsername("john.trainee")).thenReturn(Optional.of(trainee));
 
         assertThrows(UserDeactivatedException.class,
-                () -> authService.authenticate("john.trainee", "pass123"));
+                () -> authService.authenticate("john.trainee", "pass123")
+        );
+
+        verify(loginFailureCounter).increment();
+        verify(loginSuccessCounter, never()).increment();
     }
 
     @Test
     @DisplayName("authenticate → trainer valid credentials → success")
     void authenticate_trainer_validCredentials_success() {
-        when(traineeRepository.findByUsername("john.trainer"))
-                .thenReturn(Optional.empty());
-        when(trainerRepository.findByUsername("john.trainer"))
-                .thenReturn(Optional.of(trainer));
+        when(traineeRepository.findByUsername("john.trainer")).thenReturn(Optional.empty());
+        when(trainerRepository.findByUsername("john.trainer")).thenReturn(Optional.of(trainer));
 
         assertDoesNotThrow(() -> authService.authenticate("john.trainer", "pass123"));
 
         verify(trainerRepository).findByUsername("john.trainer");
+
+        verify(loginSuccessCounter).increment();
+        verify(loginFailureCounter, never()).increment();
     }
 
     @Test
     @DisplayName("authenticate → trainer wrong password → BadCredentialException")
     void authenticate_trainer_wrongPassword_throwsBadCredential() {
-        when(traineeRepository.findByUsername("john.trainer"))
-                .thenReturn(Optional.empty());
-        when(trainerRepository.findByUsername("john.trainer"))
-                .thenReturn(Optional.of(trainer));
+        when(traineeRepository.findByUsername("john.trainer")).thenReturn(Optional.empty());
+        when(trainerRepository.findByUsername("john.trainer")).thenReturn(Optional.of(trainer));
 
-        assertThrows(BadCredentialException.class,
-                () -> authService.authenticate("john.trainer", "wrong"));
+        assertThrows(
+                BadCredentialException.class,
+                () -> authService.authenticate("john.trainer", "wrong")
+        );
+
+        verify(loginFailureCounter).increment();
+        verify(loginSuccessCounter, never()).increment();
     }
 
     @Test
     @DisplayName("authenticate → trainer inactive → UserDeactivatedException")
     void authenticate_trainer_inactive_throwsUserDeactivated() {
         trainer.setActive(false);
-        when(traineeRepository.findByUsername("john.trainer"))
-                .thenReturn(Optional.empty());
-        when(trainerRepository.findByUsername("john.trainer"))
-                .thenReturn(Optional.of(trainer));
+
+        when(traineeRepository.findByUsername("john.trainer")).thenReturn(Optional.empty());
+        when(trainerRepository.findByUsername("john.trainer")).thenReturn(Optional.of(trainer));
 
         assertThrows(UserDeactivatedException.class,
-                () -> authService.authenticate("john.trainer", "pass123"));
+                () -> authService.authenticate("john.trainer", "pass123")
+        );
+
+        verify(loginFailureCounter).increment();
+        verify(loginSuccessCounter, never()).increment();
     }
 
     @Test
     @DisplayName("authenticate → user not found → BadCredentialException")
     void authenticate_userNotFound_throwsBadCredential() {
-        when(traineeRepository.findByUsername("unknown"))
-                .thenReturn(Optional.empty());
-        when(trainerRepository.findByUsername("unknown"))
-                .thenReturn(Optional.empty());
+        when(traineeRepository.findByUsername("unknown")).thenReturn(Optional.empty());
+        when(trainerRepository.findByUsername("unknown")).thenReturn(Optional.empty());
 
         assertThrows(BadCredentialException.class,
-                () -> authService.authenticate("unknown", "pass123"));
+                () -> authService.authenticate("unknown", "pass123")
+        );
+
+        verify(loginSuccessCounter, never()).increment();
+        verify(loginFailureCounter, never()).increment();
     }
 
-    // ─── changePassword ────
+    // ───────────────── changePassword ─────────────────
 
     @Test
     @DisplayName("changePassword → trainee valid old password → password changed")
     void changePassword_trainee_validOldPassword_success() {
-        when(traineeRepository.findByUsername("john.trainee"))
-                .thenReturn(Optional.of(trainee));
+        when(traineeRepository.findByUsername("john.trainee")).thenReturn(Optional.of(trainee));
 
         authService.changePassword("john.trainee", "pass123", "newPass");
 
@@ -151,11 +172,11 @@ class AuthServiceTest {
     @Test
     @DisplayName("changePassword → trainee wrong old password → BadCredentialException")
     void changePassword_trainee_wrongOldPassword_throwsBadCredential() {
-        when(traineeRepository.findByUsername("john.trainee"))
-                .thenReturn(Optional.of(trainee));
+        when(traineeRepository.findByUsername("john.trainee")).thenReturn(Optional.of(trainee));
 
         assertThrows(BadCredentialException.class,
-                () -> authService.changePassword("john.trainee", "wrong", "newPass"));
+                () -> authService.changePassword("john.trainee", "wrong", "newPass")
+        );
 
         verify(traineeRepository, never()).save(any());
     }
@@ -163,27 +184,25 @@ class AuthServiceTest {
     @Test
     @DisplayName("changePassword → trainer valid old password → password changed")
     void changePassword_trainer_validOldPassword_success() {
-        when(traineeRepository.findByUsername("john.trainer"))
-                .thenReturn(Optional.empty());
-        when(trainerRepository.findByUsername("john.trainer"))
-                .thenReturn(Optional.of(trainer));
+        when(traineeRepository.findByUsername("john.trainer")).thenReturn(Optional.empty());
+        when(trainerRepository.findByUsername("john.trainer")).thenReturn(Optional.of(trainer));
 
         authService.changePassword("john.trainer", "pass123", "newPass");
 
         assertEquals("newPass", trainer.getPassword());
+
         verify(trainerRepository).save(trainer);
     }
 
     @Test
     @DisplayName("changePassword → trainer wrong old password → BadCredentialException")
     void changePassword_trainer_wrongOldPassword_throwsBadCredential() {
-        when(traineeRepository.findByUsername("john.trainer"))
-                .thenReturn(Optional.empty());
-        when(trainerRepository.findByUsername("john.trainer"))
-                .thenReturn(Optional.of(trainer));
+        when(traineeRepository.findByUsername("john.trainer")).thenReturn(Optional.empty());
+        when(trainerRepository.findByUsername("john.trainer")).thenReturn(Optional.of(trainer));
 
         assertThrows(BadCredentialException.class,
-                () -> authService.changePassword("john.trainer", "wrong", "newPass"));
+                () -> authService.changePassword("john.trainer", "wrong", "newPass")
+        );
 
         verify(trainerRepository, never()).save(any());
     }
@@ -191,12 +210,11 @@ class AuthServiceTest {
     @Test
     @DisplayName("changePassword → user not found → BadCredentialException")
     void changePassword_userNotFound_throwsBadCredential() {
-        when(traineeRepository.findByUsername("unknown"))
-                .thenReturn(Optional.empty());
-        when(trainerRepository.findByUsername("unknown"))
-                .thenReturn(Optional.empty());
+        when(traineeRepository.findByUsername("unknown")).thenReturn(Optional.empty());
+        when(trainerRepository.findByUsername("unknown")).thenReturn(Optional.empty());
 
         assertThrows(BadCredentialException.class,
-                () -> authService.changePassword("unknown", "pass123", "newPass"));
+                () -> authService.changePassword("unknown", "pass123", "newPass")
+        );
     }
 }
