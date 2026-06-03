@@ -53,7 +53,11 @@ public class AuthController {
                     responseCode = "403",
                     description = "User account is deactivated",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            )
+            ),
+            @ApiResponse(
+                    responseCode = "429",
+                    description = "Account temporarily blocked",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         String token = authService.login(request.username(), request.password());
