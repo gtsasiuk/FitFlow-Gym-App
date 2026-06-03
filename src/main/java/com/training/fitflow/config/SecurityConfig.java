@@ -45,9 +45,9 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**",
-                                "/swagger-ui.html", "/webjars/**", "/actuator/**").permitAll()
+                                "/swagger-ui.html", "/webjars/**", "/actuator/**", "/favicon.ico").permitAll()
                         .requestMatchers(HttpMethod.POST,
-                                "api/v1/auth/login", "/api/v1/trainees","/api/v1/trainers").permitAll()
+                                "/api/v1/auth/login", "/api/v1/trainees","/api/v1/trainers").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(transactionLoggingFilter, UsernamePasswordAuthenticationFilter.class)

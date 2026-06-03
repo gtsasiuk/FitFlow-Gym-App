@@ -21,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,6 +43,9 @@ class TrainerServiceTest {
     private UsernameGenerator usernameGenerator;
     @Mock
     private PasswordGenerator passwordGenerator;
+    @Mock
+    private BCryptPasswordEncoder passwordEncoder;
+
 
     @InjectMocks
     private TrainerService service;
@@ -80,34 +84,27 @@ class TrainerServiceTest {
         TrainerCreateResponse response =
                 new TrainerCreateResponse("John.Doe", "pass123");
 
-        when(trainingTypeRepository.findById(1L))
-                .thenReturn(Optional.of(type));
-
-        when(trainerMapper.toEntity(request))
-                .thenReturn(mapped);
-
-        when(usernameGenerator.generate("John", "Doe"))
-                .thenReturn("John.Doe");
-
-        when(passwordGenerator.generate())
-                .thenReturn("pass123");
-
+        when(trainingTypeRepository.findById(1L)).thenReturn(Optional.of(type));
+        when(trainerMapper.toEntity(request)).thenReturn(mapped);
+        when(usernameGenerator.generate("John", "Doe")).thenReturn("John.Doe");
+        when(passwordGenerator.generate()).thenReturn("pass123");
+        when(passwordEncoder.encode("pass123")).thenReturn("hashedPass123");
         when(trainerRepository.save(any(Trainer.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
-
-        when(trainerMapper.toCreateResponse(any(Trainer.class)))
+        when(trainerMapper.toCreateResponse(any(Trainer.class), eq("pass123")))
                 .thenReturn(response);
 
         TrainerCreateResponse result = service.create(request);
 
         assertEquals("John.Doe", mapped.getUsername());
-        assertEquals("pass123", mapped.getPassword());
+        assertEquals("hashedPass123", mapped.getPassword());
         assertTrue(mapped.getActive());
         assertEquals(type, mapped.getSpecialization());
 
         assertEquals("John.Doe", result.username());
         assertEquals("pass123", result.password());
 
+        verify(passwordEncoder).encode("pass123");
         verify(trainerRepository).save(mapped);
     }
 
