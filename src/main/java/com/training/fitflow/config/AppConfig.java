@@ -6,8 +6,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.*;
 
 @Configuration
-@ComponentScan(basePackages = "com.training.fitflow")
-@PropertySource("classpath:application.properties")
 public class AppConfig {
     @Bean
     public ObjectMapper objectMapper() {

@@ -12,6 +12,7 @@ import java.util.Optional;
 @Repository
 public interface TrainerRepository extends JpaRepository<Trainer, Long> {
     Optional<Trainer> findByUsername(String username);
+    long countByActiveTrue();
 
     List<Trainer> findAllByUsernameIn(List<String> usernames);
 
