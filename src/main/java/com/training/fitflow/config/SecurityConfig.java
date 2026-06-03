@@ -2,6 +2,7 @@ package com.training.fitflow.config;
 
 import com.training.fitflow.logging.TransactionLoggingFilter;
 import com.training.fitflow.security.jwt.JwtAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,17 +42,35 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**",
                                 "/swagger-ui.html", "/webjars/**", "/actuator/**", "/favicon.ico").permitAll()
                         .requestMatchers(HttpMethod.POST,
-                                "/api/v1/auth/login", "/api/v1/trainees","/api/v1/trainers").permitAll()
+                                "/api/v1/auth/login",
+                                "/api/v1/auth/logout",
+                                "/api/v1/trainees",
+                                "/api/v1/trainers").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(transactionLoggingFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(jwtAuthenticationFilter, TransactionLoggingFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, TransactionLoggingFilter.class)
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, e) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.setCharacterEncoding("UTF-8");
+                            response.getWriter().write("{\"message\":\"Authentication required\"}");
+                        })
+                        .accessDeniedHandler((request, response, e) -> {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.setContentType("application/json");
+                            response.setCharacterEncoding("UTF-8");
+                            response.getWriter().write("{\"message\":\"Access denied\"}");
+                        })
+                );
         return http.build();
     }
 

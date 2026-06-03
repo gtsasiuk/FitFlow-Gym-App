@@ -8,6 +8,7 @@ import com.training.fitflow.model.Trainer;
 import com.training.fitflow.repository.TraineeRepository;
 import com.training.fitflow.repository.TrainerRepository;
 import com.training.fitflow.security.BruteForceProtectionService;
+import com.training.fitflow.security.TokenBlacklistService;
 import com.training.fitflow.security.jwt.JwtTokenProvider;
 import io.micrometer.core.instrument.Counter;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class AuthService {
     private final BruteForceProtectionService bruteForceProtectionService;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final TokenBlacklistService tokenBlacklistService;
     private final TraineeRepository traineeRepository;
     private final TrainerRepository trainerRepository;
     private final Counter loginSuccessCounter;
@@ -66,6 +68,11 @@ public class AuthService {
         return token;
     }
 
+    public void logout(String token) {
+        log.info("Logout request received");
+        tokenBlacklistService.blacklist(token);
+        log.info("Token blacklisted successfully");
+    }
 
     public void changePassword(String username, String oldPassword, String newPassword) {
         log.info("Changing password for username={}", username);
