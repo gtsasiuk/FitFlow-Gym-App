@@ -2,6 +2,7 @@ package com.training.fitflow.controller;
 
 import com.training.fitflow.dto.auth.request.ChangePasswordRequest;
 import com.training.fitflow.dto.auth.request.LoginRequest;
+import com.training.fitflow.dto.auth.response.LoginResponse;
 import com.training.fitflow.dto.exception.response.ErrorResponse;
 import com.training.fitflow.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -54,9 +55,9 @@ public class AuthController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    public ResponseEntity<Void> login(@Valid @RequestBody LoginRequest request) {
-        authService.authenticate(request.username(), request.password());
-        return ResponseEntity.ok().build();
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        String token = authService.login(request.username(), request.password());
+        return ResponseEntity.ok().body(new LoginResponse(token));
     }
 
     @PutMapping("/change-password")
