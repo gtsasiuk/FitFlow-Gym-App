@@ -1,9 +1,5 @@
 package com.training.fitflow.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.training.fitflow.security.BasicAuthInterceptor;
-import com.training.fitflow.service.AuthService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.Validator;
@@ -11,11 +7,7 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.servlet.config.annotation.*;
 
 @Configuration
-@RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
-    private final AuthService authService;
-    private final ObjectMapper objectMapper;
-
     @Bean
     public LocalValidatorFactoryBean validator() {
         return new LocalValidatorFactoryBean();
@@ -24,12 +16,5 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public Validator getValidator() {
         return validator();
-    }
-
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new BasicAuthInterceptor(authService, objectMapper))
-                .addPathPatterns("/**")
-                .excludePathPatterns("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/webjars/**");
     }
 }
