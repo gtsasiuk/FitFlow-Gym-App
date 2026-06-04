@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(TraineeNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleTrainerNotFound(
+    public ResponseEntity<ErrorResponse> handleTraineeNotFound(
             TraineeNotFoundException ex) {
         log.warn("Trainee not found: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)

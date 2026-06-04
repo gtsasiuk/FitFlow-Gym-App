@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.sql.Date;
+import java.util.Date;
 import java.time.Instant;
 
 @Component
@@ -47,12 +47,8 @@ public class JwtTokenProvider {
             return true;
         } catch (ExpiredJwtException e) {
             log.warn("JWT token expired: {}", e.getMessage());
-        } catch (UnsupportedJwtException e) {
-            log.warn("JWT token unsupported: {}", e.getMessage());
-        } catch (MalformedJwtException e) {
-            log.warn("JWT token malformed: {}", e.getMessage());
-        } catch (SignatureException e) {
-            log.warn("JWT signature invalid: {}", e.getMessage());
+        } catch (JwtException e) {
+            log.warn("JWT token invalid: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
             log.warn("JWT token empty or null: {}", e.getMessage());
         }

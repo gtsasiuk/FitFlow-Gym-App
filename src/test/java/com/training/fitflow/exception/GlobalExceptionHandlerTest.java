@@ -114,7 +114,7 @@ class GlobalExceptionHandlerTest {
     void handleTraineeNotFound_returns404() {
         TraineeNotFoundException ex = new TraineeNotFoundException("john.doe");
 
-        ResponseEntity<ErrorResponse> response = handler.handleTrainerNotFound(ex);
+        ResponseEntity<ErrorResponse> response = handler.handleTraineeNotFound(ex);
 
         assertNotNull(response);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
