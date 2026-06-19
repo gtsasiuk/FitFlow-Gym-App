@@ -2,17 +2,27 @@ INSERT INTO training_types (name)
 VALUES ('Fitness'), ('Yoga'), ('Zumba'),('Stretching'),('Resistance');
 
 INSERT INTO users (first_name, last_name, username, password, is_active)
-VALUES ('John', 'Doe', 'John.Doe', 'pass123456', true),
-       ('Jane', 'Smith', 'Jane.Smith', 'pass456789', true),
-       ('Alex', 'Brown', 'Alex.Brown', 'pass789123', true),
-       ('Emily', 'Davis', 'Emily.Davis', 'pass321654', false),
-       ('Michael', 'Wilson', 'Michael.Wilson', 'pass654987', true),
+VALUES ('John', 'Doe', 'John.Doe',
+        '$2a$10$EA0RRNeYsXc4dqnRl0w5tOAXCQkBkiJ5xi5PzVlU446TCpO1GWDqe' /*pass123456*/, true),
+       ('Jane', 'Smith', 'Jane.Smith',
+        '$2a$10$6HaHojcHRqO.aUHNmf0t5Oj9pfApM0CU4hQNHegWagHZ6mc3/.J4W' /*pass456789*/, true),
+       ('Alex', 'Brown', 'Alex.Brown',
+        '$2a$10$6J5TxhVa9hJxirRv42FJc.qKt2nCAv9u42nzz.yHjimQDtuX/AbO.' /*pass789123*/, true),
+       ('Emily', 'Davis', 'Emily.Davis',
+        '$2a$10$uQva/hlM6Y52zQ5IEgTebuLJFss.eGog8SBp2ORbs2PPgAYnGcafu' /*pass321654*/, false),
+       ('Michael', 'Wilson', 'Michael.Wilson',
+        '$2a$10$ML017VSSGkj8MzwcHxgZSey/HZqHaTLPE0ob75aveGindrZkGHx9W' /*pass654987*/, true),
 
-       ('Mike', 'Johnson', 'Mike.Johnson', 'trainerpass1', true),
-       ('Sarah', 'Williams', 'Sarah.Williams', 'trainerpass2', true),
-       ('David', 'Miller', 'David.Miller', 'trainerpass3', true),
-       ('Laura', 'Garcia', 'Laura.Garcia', 'trainerpass4', false),
-       ('Chris', 'Martinez', 'Chris.Martinez', 'trainerpass5', true);
+       ('Mike', 'Johnson', 'Mike.Johnson',
+        '$2a$10$cSyGrsAV7mHKXYyy8w/DZewNkKzc7MnsYTd.zGTL7BMKrgQcVQuaW' /*trainerpass1*/, true),
+       ('Sarah', 'Williams', 'Sarah.Williams',
+        '$2a$10$tgCqDlzGPx10UDN4pbUaKe.o21fIdqIpUKhIkvrtmK09.vYAyHyGm' /*trainerpass2*/, true),
+       ('David', 'Miller', 'David.Miller',
+        '$2a$10$laXYJq9ilQRZKpp3oyu1YuaCeqW99uFpyfikKG0MGsJ6LRK49IzJS' /*trainerpass3*/, true),
+       ('Laura', 'Garcia', 'Laura.Garcia',
+        '$2a$10$GBFQfsA/OXx9EOHa.SPliuMBN.FliV4iM23Lft6d0zLXv9UgzjIQe' /*trainerpass4*/, false),
+       ('Chris', 'Martinez', 'Chris.Martinez',
+        '$2a$10$FsN9De4RkMobS38Go9jbSOtP8gNoBVQFitYFDjutq0SPiI8hWM7uG' /*trainerpass5*/, true);
 
 INSERT INTO trainees (id, date_of_birth, address)
 VALUES (1, '1990-05-15', '123 Main St, New York, NY'),

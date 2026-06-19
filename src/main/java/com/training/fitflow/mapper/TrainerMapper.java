@@ -22,7 +22,9 @@ public interface TrainerMapper {
     @Mapping(target = "trainees", ignore = true)
     Trainer toEntity(TrainerCreateRequest trainerCreateRequest);
 
-    TrainerCreateResponse toCreateResponse(Trainer trainer);
+    default TrainerCreateResponse toCreateResponse(Trainer trainer, String rawPassword) {
+        return new TrainerCreateResponse(trainer.getUsername(), rawPassword);
+    }
 
     @Mapping(target = "isActive", source = "active")
     @Mapping(target = "trainees", source = "trainees")
