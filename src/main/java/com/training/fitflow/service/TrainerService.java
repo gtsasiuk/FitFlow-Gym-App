@@ -17,6 +17,7 @@ import com.training.fitflow.util.UsernameGenerator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,6 +31,7 @@ public class TrainerService {
     private final TrainerMapper trainerMapper;
     private final UsernameGenerator usernameGenerator;
     private final PasswordGenerator passwordGenerator;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Transactional
     public TrainerCreateResponse create(TrainerCreateRequest request) {
@@ -41,18 +43,20 @@ public class TrainerService {
         trainer.setSpecialization(specialization);
 
         String username = usernameGenerator.generate(trainer.getFirstName(), trainer.getLastName());
-        String password = passwordGenerator.generate();
+        String rawPassword = passwordGenerator.generate();
 
         log.debug("Generated username={}", username);
 
+        String hashedPassword = passwordEncoder.encode(rawPassword);
+
         trainer.setUsername(username);
-        trainer.setPassword(password);
+        trainer.setPassword(hashedPassword);
         trainer.setActive(true);
 
         Trainer saved = trainerRepository.save(trainer);
         log.info("Trainer created successfully with id={}", saved.getId());
 
-        return trainerMapper.toCreateResponse(saved);
+        return trainerMapper.toCreateResponse(saved, rawPassword);
     }
 
     @Transactional

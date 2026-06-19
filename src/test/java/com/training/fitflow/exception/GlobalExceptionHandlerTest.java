@@ -77,6 +77,21 @@ class GlobalExceptionHandlerTest {
         assertEquals("User account is deactivated", response.getBody().message());
     }
 
+    // ─── UserBlockedException ─────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("handleUserBlocked → returns 429 with fixed message")
+    void handleUserBlocked_returns429() {
+        UserBlockedException ex = new UserBlockedException();
+
+        ResponseEntity<ErrorResponse> response = handler.handleUserBlocked(ex);
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Account temporarily blocked. Try again in 5 minutes.", response.getBody().message());
+    }
+
     // ─── IllegalStateException ────────────────────────────────────────────────
 
     @Test
@@ -99,7 +114,7 @@ class GlobalExceptionHandlerTest {
     void handleTraineeNotFound_returns404() {
         TraineeNotFoundException ex = new TraineeNotFoundException("john.doe");
 
-        ResponseEntity<ErrorResponse> response = handler.handleTrainerNotFound(ex);
+        ResponseEntity<ErrorResponse> response = handler.handleTraineeNotFound(ex);
 
         assertNotNull(response);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());

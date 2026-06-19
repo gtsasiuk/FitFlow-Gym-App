@@ -23,6 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -49,6 +50,8 @@ class TraineeServiceTest {
     private PasswordGenerator passwordGenerator;
     @Mock
     private TrainerMapper trainerMapper;
+    @Mock
+    private BCryptPasswordEncoder passwordEncoder;
 
     @InjectMocks
     private TraineeService service;
@@ -88,13 +91,12 @@ class TraineeServiceTest {
                 new TraineeCreateResponse("John.Doe", "generatedPass");
 
         when(traineeMapper.toEntity(request)).thenReturn(mappedTrainee);
-        when(usernameGenerator.generate("John", "Doe"))
-                .thenReturn("John.Doe");
-        when(passwordGenerator.generate())
-                .thenReturn("generatedPass");
+        when(usernameGenerator.generate("John", "Doe")).thenReturn("John.Doe");
+        when(passwordGenerator.generate()).thenReturn("generatedPass");
+        when(passwordEncoder.encode("generatedPass")).thenReturn("hashedPassword");
         when(traineeRepository.save(any(Trainee.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
-        when(traineeMapper.toTraineeCreateResponse(any(Trainee.class)))
+        when(traineeMapper.toTraineeCreateResponse(any(Trainee.class), eq("generatedPass")))
                 .thenReturn(response);
 
         TraineeCreateResponse result = service.create(request);
@@ -104,9 +106,10 @@ class TraineeServiceTest {
         assertEquals("generatedPass", result.password());
 
         assertEquals("John.Doe", mappedTrainee.getUsername());
-        assertEquals("generatedPass", mappedTrainee.getPassword());
+        assertEquals("hashedPassword", mappedTrainee.getPassword());
         assertTrue(mappedTrainee.getActive());
 
+        verify(passwordEncoder).encode("generatedPass");
         verify(traineeRepository).save(mappedTrainee);
     }
 

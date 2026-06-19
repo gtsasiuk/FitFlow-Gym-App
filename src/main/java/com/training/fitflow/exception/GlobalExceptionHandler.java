@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(TraineeNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleTrainerNotFound(
+    public ResponseEntity<ErrorResponse> handleTraineeNotFound(
             TraineeNotFoundException ex) {
         log.warn("Trainee not found: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -102,6 +102,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse("Endpoint not found: " + ex.getHttpMethod() + " " + ex.getRequestURL()));
     }
+
+    @ExceptionHandler(UserBlockedException.class)
+    public ResponseEntity<ErrorResponse> handleUserBlocked(UserBlockedException ex) {
+        log.warn("User blocked: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(new ErrorResponse(ex.getMessage()));
+    }
+
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneral(Exception ex) {

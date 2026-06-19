@@ -1,18 +1,28 @@
 package com.training.fitflow.service;
 
 import com.training.fitflow.exception.BadCredentialException;
+import com.training.fitflow.exception.UserBlockedException;
 import com.training.fitflow.exception.UserDeactivatedException;
 import com.training.fitflow.model.Trainee;
 import com.training.fitflow.model.Trainer;
 import com.training.fitflow.repository.TraineeRepository;
 import com.training.fitflow.repository.TrainerRepository;
+import com.training.fitflow.security.BruteForceProtectionService;
+import com.training.fitflow.security.TokenBlacklistService;
+import com.training.fitflow.security.jwt.JwtTokenProvider;
 import io.micrometer.core.instrument.Counter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.Optional;
 
@@ -23,6 +33,16 @@ import static org.mockito.Mockito.*;
 @DisplayName("AuthService Tests")
 class AuthServiceTest {
     @Mock
+    private AuthenticationManager authenticationManager;
+    @Mock
+    private BruteForceProtectionService bruteForceProtectionService;
+    @Mock
+    private BCryptPasswordEncoder passwordEncoder;
+    @Mock
+    private JwtTokenProvider jwtTokenProvider;
+    @Mock
+    private TokenBlacklistService tokenBlacklistService;
+    @Mock
     private TraineeRepository traineeRepository;
     @Mock
     private TrainerRepository trainerRepository;
@@ -31,6 +51,7 @@ class AuthServiceTest {
     @Mock
     private Counter loginFailureCounter;
 
+    @InjectMocks
     private AuthService authService;
 
     private Trainee trainee;
@@ -38,122 +59,86 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
-        authService = new AuthService(traineeRepository, trainerRepository, loginSuccessCounter, loginFailureCounter);
-
         trainee = new Trainee();
         trainee.setId(1L);
         trainee.setUsername("john.trainee");
-        trainee.setPassword("pass123");
+        trainee.setPassword("$2a$10$hashedPassword");
         trainee.setActive(true);
 
         trainer = new Trainer();
         trainer.setId(2L);
         trainer.setUsername("john.trainer");
-        trainer.setPassword("pass123");
+        trainer.setPassword("$2a$10$hashedPassword");
         trainer.setActive(true);
     }
 
-    // ───────────────── authenticate ─────────────────
+    // ───────────────── login ─────────────────
 
     @Test
-    @DisplayName("authenticate → trainee valid credentials → success")
-    void authenticate_trainee_validCredentials_success() {
-        when(traineeRepository.findByUsername("john.trainee")).thenReturn(Optional.of(trainee));
+    @DisplayName("login → valid credentials → returns token")
+    void login_validCredentials_returnsToken() {
+        when(bruteForceProtectionService.isBlocked("john.trainee")).thenReturn(false);
+        when(jwtTokenProvider.generateToken("john.trainee")).thenReturn("jwt-token");
 
-        assertDoesNotThrow(() -> authService.authenticate("john.trainee", "pass123"));
+        String token = authService.login("john.trainee", "pass123");
 
-        verify(traineeRepository).findByUsername("john.trainee");
-        verifyNoInteractions(trainerRepository);
-
+        assertEquals("jwt-token", token);
+        verify(authenticationManager).authenticate(
+                new UsernamePasswordAuthenticationToken("john.trainee", "pass123")
+        );
+        verify(bruteForceProtectionService).resetAttempts("john.trainee");
         verify(loginSuccessCounter).increment();
         verify(loginFailureCounter, never()).increment();
     }
 
     @Test
-    @DisplayName("authenticate → trainee wrong password → BadCredentialException")
-    void authenticate_trainee_wrongPassword_throwsBadCredential() {
-        when(traineeRepository.findByUsername("john.trainee")).thenReturn(Optional.of(trainee));
+    @DisplayName("login → user blocked → UserBlockedException")
+    void login_userBlocked_throwsUserBlockedException() {
+        when(bruteForceProtectionService.isBlocked("john.trainee")).thenReturn(true);
+
+        assertThrows(UserBlockedException.class,
+                () -> authService.login("john.trainee", "pass123")
+        );
+
+        verifyNoInteractions(authenticationManager);
+    }
+
+    @Test
+    @DisplayName("login → wrong password → BadCredentialException")
+    void login_wrongPassword_throwsBadCredentialException() {
+        when(bruteForceProtectionService.isBlocked("john.trainee")).thenReturn(false);
+        doThrow(new BadCredentialsException("Bad credentials"))
+                .when(authenticationManager)
+                .authenticate(any());
 
         assertThrows(BadCredentialException.class,
-                () -> authService.authenticate("john.trainee", "wrong")
+                () -> authService.login("john.trainee", "wrong")
         );
 
-        verify(loginFailureCounter).increment();
-        verify(loginSuccessCounter, never()).increment();
+        verify(bruteForceProtectionService).registerFailure("john.trainee");
     }
 
     @Test
-    @DisplayName("authenticate → trainee inactive → UserDeactivatedException")
-    void authenticate_trainee_inactive_throwsUserDeactivated() {
-        trainee.setActive(false);
-
-        when(traineeRepository.findByUsername("john.trainee")).thenReturn(Optional.of(trainee));
+    @DisplayName("login → user disabled → UserDeactivatedException")
+    void login_userDisabled_throwsUserDeactivatedException() {
+        when(bruteForceProtectionService.isBlocked("john.trainee")).thenReturn(false);
+        doThrow(new DisabledException("User disabled"))
+                .when(authenticationManager)
+                .authenticate(any());
 
         assertThrows(UserDeactivatedException.class,
-                () -> authService.authenticate("john.trainee", "pass123")
+                () -> authService.login("john.trainee", "pass123")
         );
-
-        verify(loginFailureCounter).increment();
-        verify(loginSuccessCounter, never()).increment();
     }
 
-    @Test
-    @DisplayName("authenticate → trainer valid credentials → success")
-    void authenticate_trainer_validCredentials_success() {
-        when(traineeRepository.findByUsername("john.trainer")).thenReturn(Optional.empty());
-        when(trainerRepository.findByUsername("john.trainer")).thenReturn(Optional.of(trainer));
-
-        assertDoesNotThrow(() -> authService.authenticate("john.trainer", "pass123"));
-
-        verify(trainerRepository).findByUsername("john.trainer");
-
-        verify(loginSuccessCounter).increment();
-        verify(loginFailureCounter, never()).increment();
-    }
+    // ───────────────── logout ─────────────────
 
     @Test
-    @DisplayName("authenticate → trainer wrong password → BadCredentialException")
-    void authenticate_trainer_wrongPassword_throwsBadCredential() {
-        when(traineeRepository.findByUsername("john.trainer")).thenReturn(Optional.empty());
-        when(trainerRepository.findByUsername("john.trainer")).thenReturn(Optional.of(trainer));
+    @DisplayName("logout → valid token → token blacklisted")
+    void logout_validToken_tokenBlacklisted() {
+        authService.logout("jwt-token");
 
-        assertThrows(
-                BadCredentialException.class,
-                () -> authService.authenticate("john.trainer", "wrong")
-        );
-
-        verify(loginFailureCounter).increment();
-        verify(loginSuccessCounter, never()).increment();
-    }
-
-    @Test
-    @DisplayName("authenticate → trainer inactive → UserDeactivatedException")
-    void authenticate_trainer_inactive_throwsUserDeactivated() {
-        trainer.setActive(false);
-
-        when(traineeRepository.findByUsername("john.trainer")).thenReturn(Optional.empty());
-        when(trainerRepository.findByUsername("john.trainer")).thenReturn(Optional.of(trainer));
-
-        assertThrows(UserDeactivatedException.class,
-                () -> authService.authenticate("john.trainer", "pass123")
-        );
-
-        verify(loginFailureCounter).increment();
-        verify(loginSuccessCounter, never()).increment();
-    }
-
-    @Test
-    @DisplayName("authenticate → user not found → BadCredentialException")
-    void authenticate_userNotFound_throwsBadCredential() {
-        when(traineeRepository.findByUsername("unknown")).thenReturn(Optional.empty());
-        when(trainerRepository.findByUsername("unknown")).thenReturn(Optional.empty());
-
-        assertThrows(BadCredentialException.class,
-                () -> authService.authenticate("unknown", "pass123")
-        );
-
-        verify(loginSuccessCounter, never()).increment();
-        verify(loginFailureCounter, never()).increment();
+        verify(tokenBlacklistService).blacklist("jwt-token");
     }
 
     // ───────────────── changePassword ─────────────────
@@ -162,10 +147,12 @@ class AuthServiceTest {
     @DisplayName("changePassword → trainee valid old password → password changed")
     void changePassword_trainee_validOldPassword_success() {
         when(traineeRepository.findByUsername("john.trainee")).thenReturn(Optional.of(trainee));
+        when(passwordEncoder.matches("pass123", trainee.getPassword())).thenReturn(true);
+        when(passwordEncoder.encode("newPass")).thenReturn("$2a$10$newHashedPassword");
 
         authService.changePassword("john.trainee", "pass123", "newPass");
 
-        assertEquals("newPass", trainee.getPassword());
+        assertEquals("$2a$10$newHashedPassword", trainee.getPassword());
         verify(traineeRepository).save(trainee);
     }
 
@@ -173,6 +160,7 @@ class AuthServiceTest {
     @DisplayName("changePassword → trainee wrong old password → BadCredentialException")
     void changePassword_trainee_wrongOldPassword_throwsBadCredential() {
         when(traineeRepository.findByUsername("john.trainee")).thenReturn(Optional.of(trainee));
+        when(passwordEncoder.matches("wrong", trainee.getPassword())).thenReturn(false);
 
         assertThrows(BadCredentialException.class,
                 () -> authService.changePassword("john.trainee", "wrong", "newPass")
@@ -186,11 +174,12 @@ class AuthServiceTest {
     void changePassword_trainer_validOldPassword_success() {
         when(traineeRepository.findByUsername("john.trainer")).thenReturn(Optional.empty());
         when(trainerRepository.findByUsername("john.trainer")).thenReturn(Optional.of(trainer));
+        when(passwordEncoder.matches("pass123", trainer.getPassword())).thenReturn(true);
+        when(passwordEncoder.encode("newPass")).thenReturn("$2a$10$newHashedPassword");
 
         authService.changePassword("john.trainer", "pass123", "newPass");
 
-        assertEquals("newPass", trainer.getPassword());
-
+        assertEquals("$2a$10$newHashedPassword", trainer.getPassword());
         verify(trainerRepository).save(trainer);
     }
 
@@ -199,6 +188,7 @@ class AuthServiceTest {
     void changePassword_trainer_wrongOldPassword_throwsBadCredential() {
         when(traineeRepository.findByUsername("john.trainer")).thenReturn(Optional.empty());
         when(trainerRepository.findByUsername("john.trainer")).thenReturn(Optional.of(trainer));
+        when(passwordEncoder.matches("wrong", trainer.getPassword())).thenReturn(false);
 
         assertThrows(BadCredentialException.class,
                 () -> authService.changePassword("john.trainer", "wrong", "newPass")
@@ -216,5 +206,8 @@ class AuthServiceTest {
         assertThrows(BadCredentialException.class,
                 () -> authService.changePassword("unknown", "pass123", "newPass")
         );
+
+        verify(traineeRepository, never()).save(any());
+        verify(trainerRepository, never()).save(any());
     }
 }

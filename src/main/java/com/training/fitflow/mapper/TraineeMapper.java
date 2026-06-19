@@ -18,7 +18,9 @@ public interface TraineeMapper {
     @Mapping(target = "trainings", ignore = true)
     Trainee toEntity(TraineeCreateRequest traineeCreateRequest);
 
-    TraineeCreateResponse toTraineeCreateResponse(Trainee trainee);
+    default TraineeCreateResponse toTraineeCreateResponse(Trainee trainee, String rawPassword) {
+        return new TraineeCreateResponse(trainee.getUsername(), rawPassword);
+    }
 
     @Mapping(target = "isActive", source = "active")
     @Mapping(target = "trainers", source = "trainers")
