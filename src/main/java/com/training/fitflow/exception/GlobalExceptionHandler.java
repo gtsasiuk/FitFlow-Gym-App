@@ -1,6 +1,8 @@
 package com.training.fitflow.exception;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.training.fitflow.dto.exception.response.ErrorResponse;
+import feign.FeignException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -15,6 +17,43 @@ import java.util.stream.Collectors;
 @ControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+    @ExceptionHandler(WorkloadServiceUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleWorkloadUnavailable(WorkloadServiceUnavailableException ex) {
+        log.error("Workload service unavailable: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new ErrorResponse(ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidWorkloadQueryException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidWorkloadQuery(InvalidWorkloadQueryException ex) {
+        log.warn("Invalid workload query: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(ex.getMessage()));
+    }
+
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<ErrorResponse> handleFeign(FeignException ex) {
+        int status = ex.status();
+
+        if (status >= 400 && status < 500) {
+            log.warn("Downstream client error: status={}, body={}", status, ex.contentUTF8());
+            return ResponseEntity.status(status)
+                    .body(new ErrorResponse(extractMessage(ex.contentUTF8())));
+        }
+
+        log.error("Downstream server error: status={}", status, ex);
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(new ErrorResponse("Downstream service error"));
+    }
+
+    private String extractMessage(String body) {
+        try {
+            return new ObjectMapper().readTree(body).path("message").asText("Bad request");
+        } catch (Exception e) {
+            return "Bad request";
+        }
+    }
+
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex) {
         String message = ex.getConstraintViolations()
