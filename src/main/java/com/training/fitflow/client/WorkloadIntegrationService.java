@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class WorkloadIntegrationService {
-
     private final WorkloadClient workloadClient;
 
     @CircuitBreaker(name = "workloadService", fallbackMethod = "fallback")
