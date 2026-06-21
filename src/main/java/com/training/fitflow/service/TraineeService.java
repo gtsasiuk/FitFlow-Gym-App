@@ -1,5 +1,7 @@
 package com.training.fitflow.service;
 
+import com.training.fitflow.client.WorkloadIntegrationService;
+import com.training.fitflow.client.dto.TrainerWorkloadRequest;
 import com.training.fitflow.dto.trainee.request.TraineeCreateRequest;
 import com.training.fitflow.dto.trainee.request.TraineeUpdateRequest;
 import com.training.fitflow.dto.trainee.response.TraineeCreateResponse;
@@ -37,6 +39,7 @@ public class TraineeService {
     private final PasswordGenerator passwordGenerator;
     private final TrainerMapper trainerMapper;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final WorkloadIntegrationService workloadIntegrationService;
 
     @Transactional
     public TraineeCreateResponse create(TraineeCreateRequest request) {
@@ -183,10 +186,31 @@ public class TraineeService {
         Trainee trainee = traineeRepository.findByUsername(username)
                 .orElseThrow(() -> new TraineeNotFoundException(username));
 
+        List<TrainerWorkloadRequest> workloadUpdates = trainee.getTrainings().stream()
+                .map(training -> new TrainerWorkloadRequest(
+                        training.getTrainer().getUsername(),
+                        training.getTrainer().getFirstName(),
+                        training.getTrainer().getLastName(),
+                        training.getTrainer().getActive(),
+                        training.getDate(),
+                        training.getDuration().longValue(),
+                        TrainerWorkloadRequest.ActionType.DELETE
+                ))
+                .toList();
+
         trainee.getTrainers().clear();
         traineeRepository.save(trainee);
 
         traineeRepository.delete(trainee);
-        log.info("Trainee deleted username={}", username);
+        log.info("Trainee deleted username={}, cascaded trainings={}", username, workloadUpdates.size());
+
+        workloadUpdates.forEach(request -> {
+            try {
+                workloadIntegrationService.sendWorkloadUpdate(request);
+            } catch (Exception ex) {
+                log.error("Failed to notify workload service for cascaded training deletion, trainer={}. Reason: {}",
+                        request.trainerUsername(), ex.getMessage());
+            }
+        });
     }
 }
