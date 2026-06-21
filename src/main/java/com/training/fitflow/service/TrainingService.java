@@ -61,17 +61,22 @@ public class TrainingService {
         Training saved = trainingRepository.save(training);
 
         log.info("About to send workload update for trainer={}", trainer.getUsername());
-        workloadIntegrationService.sendWorkloadUpdate(
-                new TrainerWorkloadRequest(
-                        trainer.getUsername(),
-                        trainer.getFirstName(),
-                        trainer.getLastName(),
-                        trainer.getActive(),
-                        saved.getDate(),
-                        saved.getDuration().longValue(),
-                        TrainerWorkloadRequest.ActionType.ADD
-                )
-        );
+        try {
+            workloadIntegrationService.sendWorkloadUpdate(
+                    new TrainerWorkloadRequest(
+                            trainer.getUsername(),
+                            trainer.getFirstName(),
+                            trainer.getLastName(),
+                            trainer.getActive(),
+                            saved.getDate(),
+                            saved.getDuration().longValue(),
+                            TrainerWorkloadRequest.ActionType.ADD
+                    )
+            );
+        } catch (Exception ex) {
+            log.error("Failed to notify workload service for trainer={}, training save is not affected. Reason: {}",
+                    trainer.getUsername(), ex.getMessage());
+        }
         log.info("Workload update call returned");
 
         log.info("Training created successfully with id={}", saved.getId());

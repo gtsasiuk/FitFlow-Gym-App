@@ -42,23 +42,8 @@ public class WorkloadIntegrationService {
         return workloadClient.getWorkload(username, year, month);
     }
 
-    private TrainerWorkloadResponse getWorkloadFallback(
-            String username, FeignException ex) {
-        if (ex.status() >= 400 && ex.status() < 500) {
-            log.warn("Workload service returned client error: status={}, trainer={}",
-                    ex.status(), username);
-            throw ex;
-        }
-        log.error("Workload service returned server error: status={}, trainer={}",
-                ex.status(), username, ex);
-        throw new WorkloadServiceUnavailableException(
-                "Workload data temporarily unavailable, please try later");
-    }
-
-    private TrainerWorkloadResponse getWorkloadFallback(
-            String username, Throwable ex) {
+    private TrainerWorkloadResponse getWorkloadFallback(String username, Throwable ex) {
         log.error("Workload service unavailable for trainer={}", username, ex);
-        throw new WorkloadServiceUnavailableException(
-                "Workload data temporarily unavailable, please try later");
+        throw new WorkloadServiceUnavailableException("Workload data temporarily unavailable, please try later");
     }
 }
