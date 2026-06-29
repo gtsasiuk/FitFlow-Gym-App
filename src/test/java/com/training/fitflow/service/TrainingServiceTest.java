@@ -1,5 +1,7 @@
 package com.training.fitflow.service;
 
+import com.training.fitflow.client.WorkloadIntegrationService;
+import com.training.fitflow.client.dto.TrainerWorkloadRequest;
 import com.training.fitflow.dto.training.request.TrainingCreateRequest;
 import com.training.fitflow.dto.training.response.TraineeTrainingResponse;
 import com.training.fitflow.dto.training.response.TrainerTrainingResponse;
@@ -41,6 +43,8 @@ class TrainingServiceTest {
     private TrainingRepository trainingRepository;
     @Mock
     private TrainingMapper trainingMapper;
+    @Mock
+    private WorkloadIntegrationService workloadIntegrationService;
 
     @InjectMocks
     private TrainingService service;
@@ -89,20 +93,52 @@ class TrainingServiceTest {
                 60
         );
 
+        trainer.setFirstName("Trainer");
+        trainer.setLastName("One");
+        trainer.setActive(true);
+
         when(trainingMapper.toEntity(request)).thenReturn(training);
-        when(trainerRepository.findByUsername("trainer.one"))
-                .thenReturn(Optional.of(trainer));
-        when(traineeRepository.findByUsername("john.doe"))
-                .thenReturn(Optional.of(trainee));
-        when(trainingRepository.save(any(Training.class)))
-                .thenAnswer(inv -> inv.getArgument(0));
+        when(trainerRepository.findByUsername("trainer.one")).thenReturn(Optional.of(trainer));
+        when(traineeRepository.findByUsername("john.doe")).thenReturn(Optional.of(trainee));
+        when(trainingRepository.save(any(Training.class))).thenAnswer(inv -> inv.getArgument(0));
 
         service.create(request);
 
         verify(trainingRepository).save(training);
+        verify(workloadIntegrationService).sendWorkloadUpdate(any(TrainerWorkloadRequest.class));
+
         assertEquals(trainer, training.getTrainer());
         assertEquals(trainee, training.getTrainee());
         assertEquals(type, training.getType());
+    }
+
+    @Test
+    @DisplayName("Create → should save training even when workload service fails")
+    void create_shouldSaveTraining_whenWorkloadServiceFails() {
+        TrainingCreateRequest request = new TrainingCreateRequest(
+                "john.doe",
+                "trainer.one",
+                "Morning Workout",
+                LocalDate.of(2024, 1, 1),
+                60
+        );
+
+        trainer.setFirstName("Trainer");
+        trainer.setLastName("One");
+        trainer.setActive(true);
+
+        when(trainingMapper.toEntity(request)).thenReturn(training);
+        when(trainerRepository.findByUsername("trainer.one")).thenReturn(Optional.of(trainer));
+        when(traineeRepository.findByUsername("john.doe")).thenReturn(Optional.of(trainee));
+        when(trainingRepository.save(any(Training.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        doThrow(new RuntimeException("Workload service unavailable")).when(workloadIntegrationService)
+                .sendWorkloadUpdate(any(TrainerWorkloadRequest.class));
+
+        assertDoesNotThrow(() -> service.create(request));
+
+        verify(trainingRepository).save(training);
+        verify(workloadIntegrationService).sendWorkloadUpdate(any(TrainerWorkloadRequest.class));
     }
 
     @Test

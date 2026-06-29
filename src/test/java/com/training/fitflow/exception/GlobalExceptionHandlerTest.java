@@ -1,6 +1,7 @@
 package com.training.fitflow.exception;
 
 import com.training.fitflow.dto.exception.response.ErrorResponse;
+import feign.FeignException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.hibernate.validator.internal.engine.path.PathImpl;
@@ -27,6 +28,89 @@ import static org.mockito.Mockito.*;
 class GlobalExceptionHandlerTest {
     @InjectMocks
     private GlobalExceptionHandler handler;
+
+    @Test
+    @DisplayName("WorkloadServiceUnavailableException → stores message")
+    void workloadServiceUnavailableException_storesMessage() {
+        WorkloadServiceUnavailableException ex = new WorkloadServiceUnavailableException("Service unavailable");
+        assertEquals("Service unavailable", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("InvalidWorkloadQueryException → stores message")
+    void invalidWorkloadQueryException_storesMessage() {
+        InvalidWorkloadQueryException ex = new InvalidWorkloadQueryException("Invalid query");
+        assertEquals("Invalid query", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("handleWorkloadUnavailable → returns 503")
+    void handleWorkloadUnavailable_returns503() {
+        WorkloadServiceUnavailableException ex = new WorkloadServiceUnavailableException("Workload service unavailable");
+
+        ResponseEntity<ErrorResponse> response = handler.handleWorkloadUnavailable(ex);
+
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Workload service unavailable", response.getBody().message());
+    }
+
+    @Test
+    @DisplayName("handleInvalidWorkloadQuery → returns 400")
+    void handleInvalidWorkloadQuery_returns400() {
+        InvalidWorkloadQueryException ex = new InvalidWorkloadQueryException("Year must be provided when month is specified");
+
+        ResponseEntity<ErrorResponse> response = handler.handleInvalidWorkloadQuery(ex);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Year must be provided when month is specified", response.getBody().message());
+    }
+
+    @Test
+    @DisplayName("handleFeign → client error → returns original message")
+    void handleFeign_clientError_returnsOriginalMessage() {
+        FeignException ex = mock(FeignException.class);
+
+        when(ex.status()).thenReturn(400);
+        when(ex.contentUTF8()).thenReturn("{\"message\":\"Trainer not found\"}");
+
+        ResponseEntity<ErrorResponse> response = handler.handleFeign(ex);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Trainer not found", response.getBody().message());
+    }
+
+    @Test
+    @DisplayName("handleFeign → invalid body → returns Bad request")
+    void handleFeign_invalidJson_returnsBadRequestMessage() {
+        FeignException ex = mock(FeignException.class);
+
+        when(ex.status()).thenReturn(400);
+        when(ex.contentUTF8()).thenReturn("not-json");
+
+        ResponseEntity<ErrorResponse> response = handler.handleFeign(ex);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Bad request", response.getBody().message());
+    }
+
+    @Test
+    @DisplayName("handleFeign → server error → returns 502")
+    void handleFeign_serverError_returns502() {
+        FeignException ex = mock(FeignException.class);
+
+        when(ex.status()).thenReturn(500);
+
+        ResponseEntity<ErrorResponse> response =
+                handler.handleFeign(ex);
+
+        assertEquals(HttpStatus.BAD_GATEWAY, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Downstream service error", response.getBody().message());
+    }
 
     // ─── ConstraintViolationException ────────────────────────────────────────────
 

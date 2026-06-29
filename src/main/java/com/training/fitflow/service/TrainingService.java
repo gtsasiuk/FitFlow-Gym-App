@@ -1,5 +1,7 @@
 package com.training.fitflow.service;
 
+import com.training.fitflow.client.WorkloadIntegrationService;
+import com.training.fitflow.client.dto.TrainerWorkloadRequest;
 import com.training.fitflow.dto.training.request.TrainingCreateRequest;
 import com.training.fitflow.dto.training.response.TraineeTrainingResponse;
 import com.training.fitflow.dto.training.response.TrainerTrainingResponse;
@@ -29,6 +31,7 @@ public class TrainingService {
     private final TrainerRepository trainerRepository;
     private final TrainingRepository trainingRepository;
     private final TrainingMapper trainingMapper;
+    private final WorkloadIntegrationService workloadIntegrationService;
 
     @Transactional
     public void create(TrainingCreateRequest request) {
@@ -56,6 +59,25 @@ public class TrainingService {
         training.setType(trainer.getSpecialization());
 
         Training saved = trainingRepository.save(training);
+
+        log.info("About to send workload update for trainer={}", trainer.getUsername());
+        try {
+            workloadIntegrationService.sendWorkloadUpdate(
+                    new TrainerWorkloadRequest(
+                            trainer.getUsername(),
+                            trainer.getFirstName(),
+                            trainer.getLastName(),
+                            trainer.getActive(),
+                            saved.getDate(),
+                            saved.getDuration().longValue(),
+                            TrainerWorkloadRequest.ActionType.ADD
+                    )
+            );
+        } catch (Exception ex) {
+            log.error("Failed to notify workload service for trainer={}, training save is not affected. Reason: {}",
+                    trainer.getUsername(), ex.getMessage());
+        }
+        log.info("Workload update call returned");
 
         log.info("Training created successfully with id={}", saved.getId());
     }

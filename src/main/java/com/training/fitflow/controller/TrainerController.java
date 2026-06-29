@@ -1,5 +1,7 @@
 package com.training.fitflow.controller;
 
+import com.training.fitflow.client.WorkloadIntegrationService;
+import com.training.fitflow.client.dto.TrainerWorkloadResponse;
 import com.training.fitflow.dto.common.request.UserStatusUpdateRequest;
 import com.training.fitflow.dto.exception.response.ErrorResponse;
 import com.training.fitflow.dto.trainer.request.TrainerCreateRequest;
@@ -7,6 +9,7 @@ import com.training.fitflow.dto.trainer.request.TrainerUpdateRequest;
 import com.training.fitflow.dto.trainer.response.TrainerCreateResponse;
 import com.training.fitflow.dto.trainer.response.TrainerProfileResponse;
 import com.training.fitflow.dto.trainer.response.TrainerUpdateResponse;
+import com.training.fitflow.exception.InvalidWorkloadQueryException;
 import com.training.fitflow.service.TrainerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -32,6 +35,7 @@ import org.springframework.web.bind.annotation.*;
 )
 public class TrainerController {
     private final TrainerService trainerService;
+    private final WorkloadIntegrationService workloadIntegrationService;
 
     @PostMapping
     @Operation(
@@ -127,5 +131,54 @@ public class TrainerController {
                                                                    @Valid @RequestBody TrainerUpdateRequest request) {
         TrainerUpdateResponse response = trainerService.update(username, request);
         return ResponseEntity.ok().body(response);
+    }
+
+    @GetMapping("/{username}/workload")
+    @Operation(
+            summary = "Get trainer workload summary",
+            description = """
+            Returns trainer workload aggregated by year and month.
+
+            Optional filters:
+            - year: returns workload only for the specified year
+            - month: returns workload only for the specified month within the specified year
+
+            If neither year nor month is provided, the full workload history is returned.
+            """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Trainer workload retrieved successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid query parameters",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Trainer not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "503",
+                    description = "Workload service unavailable",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "502",
+                    description = "Downstream workload service error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    public TrainerWorkloadResponse getWorkload(
+            @PathVariable String username,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month) {
+        if (month != null && year == null) {
+            throw new InvalidWorkloadQueryException("Year must be provided when month is specified");
+        }
+        return workloadIntegrationService.getWorkload(username, year, month);
     }
 }

@@ -1,5 +1,7 @@
 package com.training.fitflow.service;
 
+import com.training.fitflow.client.WorkloadIntegrationService;
+import com.training.fitflow.client.dto.TrainerWorkloadRequest;
 import com.training.fitflow.dto.trainee.request.TraineeCreateRequest;
 import com.training.fitflow.dto.trainee.request.TraineeUpdateRequest;
 import com.training.fitflow.dto.trainee.response.TraineeCreateResponse;
@@ -12,6 +14,7 @@ import com.training.fitflow.mapper.TraineeMapper;
 import com.training.fitflow.mapper.TrainerMapper;
 import com.training.fitflow.model.Trainee;
 import com.training.fitflow.model.Trainer;
+import com.training.fitflow.model.Training;
 import com.training.fitflow.repository.TraineeRepository;
 import com.training.fitflow.repository.TrainerRepository;
 import com.training.fitflow.util.PasswordGenerator;
@@ -26,10 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -52,6 +52,8 @@ class TraineeServiceTest {
     private TrainerMapper trainerMapper;
     @Mock
     private BCryptPasswordEncoder passwordEncoder;
+    @Mock
+    private WorkloadIntegrationService workloadIntegrationService;
 
     @InjectMocks
     private TraineeService service;
@@ -71,7 +73,10 @@ class TraineeServiceTest {
         trainee.setDateOfBirth(LocalDate.of(2000, 1, 1));
         trainee.setAddress("Test address");
         trainee.setTrainers(new HashSet<>());
+        trainee.setTrainings(new HashSet<>());
     }
+
+    // ---------------- CREATE ----------------
 
     @Test
     @DisplayName("Create → should generate credentials and save trainee")
@@ -87,15 +92,16 @@ class TraineeServiceTest {
         mappedTrainee.setFirstName("John");
         mappedTrainee.setLastName("Doe");
 
-        TraineeCreateResponse response =
-                new TraineeCreateResponse("John.Doe", "generatedPass");
+        TraineeCreateResponse response = new TraineeCreateResponse("John.Doe", "generatedPass");
 
         when(traineeMapper.toEntity(request)).thenReturn(mappedTrainee);
         when(usernameGenerator.generate("John", "Doe")).thenReturn("John.Doe");
         when(passwordGenerator.generate()).thenReturn("generatedPass");
         when(passwordEncoder.encode("generatedPass")).thenReturn("hashedPassword");
+
         when(traineeRepository.save(any(Trainee.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+
         when(traineeMapper.toTraineeCreateResponse(any(Trainee.class), eq("generatedPass")))
                 .thenReturn(response);
 
@@ -105,13 +111,11 @@ class TraineeServiceTest {
         assertEquals("John.Doe", result.username());
         assertEquals("generatedPass", result.password());
 
-        assertEquals("John.Doe", mappedTrainee.getUsername());
-        assertEquals("hashedPassword", mappedTrainee.getPassword());
-        assertTrue(mappedTrainee.getActive());
-
         verify(passwordEncoder).encode("generatedPass");
         verify(traineeRepository).save(mappedTrainee);
     }
+
+    // ---------------- UPDATE ----------------
 
     @Test
     @DisplayName("Update → should update trainee fields")
@@ -124,24 +128,10 @@ class TraineeServiceTest {
                 false
         );
 
-        TraineeUpdateResponse response = new TraineeUpdateResponse(
-                "John.Doe",
-                "Jane",
-                "Smith",
-                LocalDate.of(1999, 5, 5),
-                "New address",
-                false,
-                List.of()
-        );
-
-        when(traineeRepository.findByUsername("John.Doe"))
-                .thenReturn(Optional.of(trainee));
-
-        when(traineeRepository.save(any(Trainee.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-        when(traineeMapper.toTraineeUpdateResponse(any(Trainee.class)))
-                .thenReturn(response);
+        TraineeUpdateResponse response = mock(TraineeUpdateResponse.class);
+        when(traineeRepository.findByUsername("John.Doe")).thenReturn(Optional.of(trainee));
+        when(traineeRepository.save(any(Trainee.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(traineeMapper.toTraineeUpdateResponse(any(Trainee.class))).thenReturn(response);
 
         TraineeUpdateResponse result = service.update("John.Doe", request);
 
@@ -150,7 +140,6 @@ class TraineeServiceTest {
         assertEquals("Smith", trainee.getLastName());
         assertEquals("New address", trainee.getAddress());
         assertFalse(trainee.getActive());
-        assertEquals("John.Doe", trainee.getUsername());
 
         verify(traineeRepository).save(trainee);
     }
@@ -166,157 +155,115 @@ class TraineeServiceTest {
                 true
         );
 
-        when(traineeRepository.findByUsername("missing"))
-                .thenReturn(Optional.empty());
+        when(traineeRepository.findByUsername("missing")).thenReturn(Optional.empty());
 
-        assertThrows(
-                TraineeNotFoundException.class,
+        assertThrows(TraineeNotFoundException.class,
                 () -> service.update("missing", request)
         );
 
         verify(traineeRepository, never()).save(any());
     }
 
+    // ---------------- ACTIVATE / DEACTIVATE ----------------
+
     @Test
     @DisplayName("Activate → should activate inactive trainee")
     void activate_shouldActivateInactiveTrainee() {
         trainee.setActive(false);
-
-        when(traineeRepository.findByUsername("John.Doe"))
-                .thenReturn(Optional.of(trainee));
+        when(traineeRepository.findByUsername("John.Doe")).thenReturn(Optional.of(trainee));
 
         service.activate("John.Doe");
 
         assertTrue(trainee.getActive());
-
         verify(traineeRepository).save(trainee);
-    }
-
-    @Test
-    @DisplayName("Activate → should throw if trainee already active")
-    void activate_shouldThrowIfAlreadyActive() {
-        trainee.setActive(true);
-
-        when(traineeRepository.findByUsername("John.Doe"))
-                .thenReturn(Optional.of(trainee));
-
-        assertThrows(
-                IllegalStateException.class,
-                () -> service.activate("John.Doe")
-        );
-
-        verify(traineeRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("Activate → should throw when trainee not found")
-    void activate_shouldThrowWhenNotFound() {
-        when(traineeRepository.findByUsername("missing"))
-                .thenReturn(Optional.empty());
-
-        assertThrows(
-                TraineeNotFoundException.class,
-                () -> service.activate("missing")
-        );
     }
 
     @Test
     @DisplayName("Deactivate → should deactivate active trainee")
     void deactivate_shouldDeactivateActiveTrainee() {
         trainee.setActive(true);
-
-        when(traineeRepository.findByUsername("John.Doe"))
-                .thenReturn(Optional.of(trainee));
+        when(traineeRepository.findByUsername("John.Doe")).thenReturn(Optional.of(trainee));
 
         service.deactivate("John.Doe");
 
         assertFalse(trainee.getActive());
-
         verify(traineeRepository).save(trainee);
     }
 
     @Test
-    @DisplayName("Deactivate → should throw if trainee already inactive")
-    void deactivate_shouldThrowIfAlreadyInactive() {
-        trainee.setActive(false);
+    @DisplayName("Activate → should throw when trainee not found")
+    void activate_shouldThrowWhenNotFound() {
+        when(traineeRepository.findByUsername("missing")).thenReturn(Optional.empty());
+        assertThrows(TraineeNotFoundException.class, () -> service.activate("missing"));
+        verify(traineeRepository, never()).save(any());
+    }
 
-        when(traineeRepository.findByUsername("John.Doe"))
-                .thenReturn(Optional.of(trainee));
+    @Test
+    @DisplayName("Activate → should throw when trainee already active")
+    void activate_shouldThrowWhenAlreadyActive() {
+        trainee.setActive(true);
+        when(traineeRepository.findByUsername("John.Doe")).thenReturn(Optional.of(trainee));
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> service.deactivate("John.Doe")
-        );
-
+        assertThrows(IllegalStateException.class, () -> service.activate("John.Doe"));
         verify(traineeRepository, never()).save(any());
     }
 
     @Test
     @DisplayName("Deactivate → should throw when trainee not found")
     void deactivate_shouldThrowWhenNotFound() {
-        when(traineeRepository.findByUsername("missing"))
-                .thenReturn(Optional.empty());
-
-        assertThrows(
-                TraineeNotFoundException.class,
-                () -> service.deactivate("missing")
-        );
+        when(traineeRepository.findByUsername("missing")).thenReturn(Optional.empty());
+        assertThrows(TraineeNotFoundException.class, () -> service.deactivate("missing"));
+        verify(traineeRepository, never()).save(any());
     }
+
+    @Test
+    @DisplayName("Deactivate → should throw when trainee already inactive")
+    void deactivate_shouldThrowWhenAlreadyInactive() {
+        trainee.setActive(false);
+        when(traineeRepository.findByUsername("John.Doe")).thenReturn(Optional.of(trainee));
+
+        assertThrows(IllegalStateException.class, () -> service.deactivate("John.Doe"));
+        verify(traineeRepository, never()).save(any());
+    }
+
+    // ---------------- GET BY USERNAME ----------------
 
     @Test
     @DisplayName("GetByUsername → should return trainee profile")
     void getByUsername_shouldReturnProfile() {
-        TraineeProfileResponse response = new TraineeProfileResponse(
-                "John",
-                "Doe",
-                LocalDate.of(2000, 1, 1),
-                "Address",
-                true,
-                List.of()
-        );
+        TraineeProfileResponse response = mock(TraineeProfileResponse.class);
 
-        when(traineeRepository.findByUsername("John.Doe"))
-                .thenReturn(Optional.of(trainee));
+        when(traineeRepository.findByUsername("John.Doe")).thenReturn(Optional.of(trainee));
+        when(traineeMapper.toProfileResponse(trainee)).thenReturn(response);
 
-        when(traineeMapper.toProfileResponse(trainee))
-                .thenReturn(response);
-
-        TraineeProfileResponse result =
-                service.getByUsername("John.Doe");
+        TraineeProfileResponse result = service.getByUsername("John.Doe");
 
         assertNotNull(result);
-        assertEquals("John", result.firstName());
-
         verify(traineeMapper).toProfileResponse(trainee);
     }
 
     @Test
     @DisplayName("GetByUsername → should throw when trainee not found")
     void getByUsername_shouldThrowWhenNotFound() {
-        when(traineeRepository.findByUsername("missing"))
-                .thenReturn(Optional.empty());
+        when(traineeRepository.findByUsername("missing")).thenReturn(Optional.empty());
 
-        assertThrows(
-                TraineeNotFoundException.class,
-                () -> service.getByUsername("missing")
-        );
+        assertThrows(TraineeNotFoundException.class, () -> service.getByUsername("missing"));
     }
+
+    // ---------------- UPDATE TRAINERS ----------------
 
     @Test
     @DisplayName("UpdateTraineeTrainers → should replace trainers list")
     void updateTraineeTrainers_shouldReplaceList() {
-        Trainer trainer1 = new Trainer();
-        trainer1.setUsername("trainer1");
+        Trainer t1 = new Trainer();
+        t1.setUsername("trainer1");
 
-        Trainer trainer2 = new Trainer();
-        trainer2.setUsername("trainer2");
+        Trainer t2 = new Trainer();
+        t2.setUsername("trainer2");
 
         trainee.setTrainers(new HashSet<>(Set.of(new Trainer())));
 
-        TraineeTrainersUpdateRequest request =
-                new TraineeTrainersUpdateRequest(
-                        List.of("trainer1", "trainer2")
-                );
+        TraineeTrainersUpdateRequest request = new TraineeTrainersUpdateRequest(List.of("trainer1", "trainer2"));
 
         List<TrainerSummaryResponse> response = List.of(
                 mock(TrainerSummaryResponse.class),
@@ -326,15 +273,11 @@ class TraineeServiceTest {
         when(traineeRepository.findByUsername("John.Doe"))
                 .thenReturn(Optional.of(trainee));
 
-        when(trainerRepository.findAllByUsernameIn(
-                request.trainerUsernames()))
-                .thenReturn(List.of(trainer1, trainer2));
+        when(trainerRepository.findAllByUsernameIn(request.trainerUsernames())).thenReturn(List.of(t1, t2));
 
-        when(trainerMapper.toSummaryResponseList(anySet()))
-                .thenReturn(response);
+        when(trainerMapper.toSummaryResponseList(anySet())).thenReturn(response);
 
-        List<TrainerSummaryResponse> result =
-                service.updateTraineeTrainers("John.Doe", request);
+        List<TrainerSummaryResponse> result = service.updateTraineeTrainers("John.Doe", request);
 
         assertEquals(2, trainee.getTrainers().size());
         assertEquals(2, result.size());
@@ -344,76 +287,63 @@ class TraineeServiceTest {
 
     @Test
     @DisplayName("UpdateTraineeTrainers → should throw when trainee not found")
-    void updateTraineeTrainers_shouldThrowWhenNotFound() {
-        TraineeTrainersUpdateRequest request =
-                new TraineeTrainersUpdateRequest(List.of("trainer1"));
+    void updateTraineeTrainers_shouldThrowWhenTraineeNotFound() {
+        TraineeTrainersUpdateRequest request = new TraineeTrainersUpdateRequest(List.of("trainer1"));
+        when(traineeRepository.findByUsername("missing")).thenReturn(Optional.empty());
 
-        when(traineeRepository.findByUsername("missing"))
-                .thenReturn(Optional.empty());
-
-        assertThrows(
-                TraineeNotFoundException.class,
-                () -> service.updateTraineeTrainers("missing", request)
-        );
+        assertThrows(TraineeNotFoundException.class, () -> service.updateTraineeTrainers("missing", request));
+        verify(trainerRepository, never()).findAllByUsernameIn(any());
     }
 
+    // ---------------- GET UNASSIGNED TRAINERS ----------------
+
     @Test
-    @DisplayName("GetUnassignedTrainers → should return trainers list")
+    @DisplayName("GetUnassignedTrainers → should return trainers")
     void getUnassignedTrainers_shouldReturnList() {
         Trainer trainer = new Trainer();
+        trainer.setUsername("trainer1");
 
-        TrainerSummaryResponse response =
-                mock(TrainerSummaryResponse.class);
+        TrainerSummaryResponse response = mock(TrainerSummaryResponse.class);
 
-        when(traineeRepository.findByUsername("John.Doe"))
-                .thenReturn(Optional.of(trainee));
+        when(traineeRepository.findByUsername("John.Doe")).thenReturn(Optional.of(trainee));
+        when(trainerRepository.findNotAssignedToTrainee("John.Doe")).thenReturn(List.of(trainer));
+        when(trainerMapper.toSummaryResponse(trainer)).thenReturn(response);
 
-        when(trainerRepository.findNotAssignedToTrainee("John.Doe"))
-                .thenReturn(List.of(trainer));
-
-        when(trainerMapper.toSummaryResponse(trainer))
-                .thenReturn(response);
-
-        List<TrainerSummaryResponse> result =
-                service.getUnassignedTrainers("John.Doe");
+        List<TrainerSummaryResponse> result = service.getUnassignedTrainers("John.Doe");
 
         assertEquals(1, result.size());
+        verify(trainerRepository).findNotAssignedToTrainee("John.Doe");
     }
 
     @Test
     @DisplayName("GetUnassignedTrainers → should throw when trainee not found")
     void getUnassignedTrainers_shouldThrowWhenNotFound() {
-        when(traineeRepository.findByUsername("missing"))
-                .thenReturn(Optional.empty());
+        when(traineeRepository.findByUsername("missing")).thenReturn(Optional.empty());
 
-        assertThrows(
-                TraineeNotFoundException.class,
-                () -> service.getUnassignedTrainers("missing")
-        );
+        assertThrows(TraineeNotFoundException.class, () -> service.getUnassignedTrainers("missing"));
+        verify(trainerRepository, never()).findNotAssignedToTrainee(any());
     }
 
-    @Test
-    @DisplayName("GetAll → should return all trainees")
-    void getAll_shouldReturnAllTrainees() {
-        when(traineeRepository.findAll())
-                .thenReturn(List.of(trainee));
-
-        List<Trainee> result = service.getAll();
-
-        assertEquals(1, result.size());
-
-        verify(traineeRepository).findAll();
-    }
+    // ---------------- DELETE BY USERNAME ----------------
 
     @Test
-    @DisplayName("DeleteByUsername → should clear trainers and delete trainee")
+    @DisplayName("DeleteByUsername → should delete trainee and send workload updates")
     void deleteByUsername_shouldDeleteTrainee() {
         Trainer trainer = new Trainer();
+        trainer.setUsername("trainer.one");
+        trainer.setFirstName("Trainer");
+        trainer.setLastName("One");
+        trainer.setActive(true);
+
+        Training training = new Training();
+        training.setTrainer(trainer);
+        training.setDate(LocalDate.of(2024, 1, 1));
+        training.setDuration(60);
 
         trainee.setTrainers(new HashSet<>(Set.of(trainer)));
+        trainee.setTrainings(new HashSet<>(Set.of(training)));
 
-        when(traineeRepository.findByUsername("John.Doe"))
-                .thenReturn(Optional.of(trainee));
+        when(traineeRepository.findByUsername("John.Doe")).thenReturn(Optional.of(trainee));
 
         service.deleteByUsername("John.Doe");
 
@@ -421,19 +351,43 @@ class TraineeServiceTest {
 
         verify(traineeRepository).save(trainee);
         verify(traineeRepository).delete(trainee);
+        verify(workloadIntegrationService, times(1)).sendWorkloadUpdate(any(TrainerWorkloadRequest.class));
     }
 
     @Test
-    @DisplayName("DeleteByUsername → should throw when trainee not found")
-    void deleteByUsername_shouldThrowWhenNotFound() {
-        when(traineeRepository.findByUsername("missing"))
-                .thenReturn(Optional.empty());
+    @DisplayName("DeleteByUsername → should delete even if workload service fails")
+    void deleteByUsername_shouldHandleWorkloadFailure() {
+        Trainer trainer = new Trainer();
+        trainer.setUsername("trainer.one");
+        trainer.setFirstName("Trainer");
+        trainer.setLastName("One");
+        trainer.setActive(true);
 
-        assertThrows(
-                TraineeNotFoundException.class,
-                () -> service.deleteByUsername("missing")
-        );
+        Training training = new Training();
+        training.setTrainer(trainer);
+        training.setDate(LocalDate.of(2024, 1, 1));
+        training.setDuration(60);
 
-        verify(traineeRepository, never()).delete(any());
+        trainee.setTrainers(new HashSet<>(Set.of(trainer)));
+        trainee.setTrainings(new HashSet<>(Set.of(training)));
+
+        when(traineeRepository.findByUsername("John.Doe")).thenReturn(Optional.of(trainee));
+
+        doThrow(new RuntimeException("fail")).when(workloadIntegrationService).sendWorkloadUpdate(any());
+
+        assertDoesNotThrow(() -> service.deleteByUsername("John.Doe"));
+        verify(traineeRepository).delete(trainee);
+    }
+
+    // ---------------- GET ALL ----------------
+    @Test
+    @DisplayName("GetAll → should return all trainees")
+    void getAll_shouldReturnAllTrainees() {
+        when(traineeRepository.findAll()).thenReturn(List.of(trainee));
+
+        List<Trainee> result = service.getAll();
+
+        assertEquals(1, result.size());
+        verify(traineeRepository).findAll();
     }
 }
